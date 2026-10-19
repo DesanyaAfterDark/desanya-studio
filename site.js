@@ -372,6 +372,117 @@ var DESANYA_LINKS = {
     });
   }
 
+  /* ---------- GA4 conversion events (existing gtag only) ---------- */
+  function track(name, params) {
+    if (typeof window.gtag !== 'function') return;
+    var data = { transport_type: 'beacon' };
+    if (params) {
+      for (var key in params) {
+        if (Object.prototype.hasOwnProperty.call(params, key) && params[key] != null && params[key] !== '') {
+          data[key] = params[key];
+        }
+      }
+    }
+    try { window.gtag('event', name, data); } catch (err) {}
+  }
+
+  function formName(form) {
+    if (form.hasAttribute('data-review-form')) return 'review';
+    if (form.id === 'orderForm') return 'order';
+    if (form.hasAttribute('data-booking-form') || form.id === 'bookingForm') return 'booking';
+    return 'contact';
+  }
+
+  function isFormSubmit(form) {
+    var action = (form.getAttribute('action') || form.action || '').toLowerCase();
+    return action.indexOf('formsubmit.co') !== -1;
+  }
+
+  function platformFromUrl(href) {
+    var host = '';
+    try {
+      host = new URL(href, window.location.href).hostname.replace(/^www\./, '').toLowerCase();
+    } catch (err) {
+      return '';
+    }
+    if (host === 'facebook.com' || host === 'fb.com' || host === 'm.facebook.com') return 'facebook';
+    if (host === 'instagram.com') return 'instagram';
+    if (host === 'threads.com' || host === 'threads.net') return 'threads';
+    if (host === 'tiktok.com') return 'tiktok';
+    if (host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com') return 'youtube';
+    if (host === 'linkedin.com' || host.slice(-13) === '.linkedin.com') return 'linkedin';
+    if (host === 'x.com' || host === 'twitter.com') return 'x';
+    return '';
+  }
+
+  function isSocialProfile(anchor) {
+    if (anchor.closest('[data-social-links], [data-linkedin-note]')) return true;
+    var href = (anchor.href || '').replace(/\/$/, '');
+    var social = DESANYA_LINKS.social || {};
+    var keys = Object.keys(social);
+    for (var i = 0; i < keys.length; i++) {
+      var url = configuredUrl(social[keys[i]]);
+      if (url && href === url.replace(/\/$/, '')) return true;
+    }
+    return false;
+  }
+
+  function paypalItemName() {
+    try {
+      var cart = window.DesanyaCart;
+      if (cart && typeof cart.getItems === 'function') {
+        var names = cart.getItems().map(function (item) { return item && item.name; }).filter(Boolean);
+        if (names.length) return names.join(', ');
+      }
+    } catch (err) {}
+    var path = (window.location.pathname || '').split('/').filter(Boolean).pop();
+    return path || 'home';
+  }
+
+  function onTrackedClick(event) {
+    if (event.button && event.button !== 0) return;
+    var node = event.target;
+    if (!node || node.nodeType !== 1) node = node && node.parentElement;
+    if (!node || !node.closest) return;
+    var anchor = node.closest('a');
+    if (!anchor) {
+      if (node.closest('#paypal-buttons')) track('paypal_click', { item_name: paypalItemName() });
+      return;
+    }
+    var href = anchor.getAttribute('href') || '';
+    if (/^tel:/i.test(href)) {
+      track('phone_click');
+      return;
+    }
+    if (/^mailto:/i.test(href)) {
+      track('email_click');
+      return;
+    }
+    if (/calendly\.com/i.test(anchor.href || href)) {
+      track('calendly_click');
+      return;
+    }
+    if (/paypal\.(com|me)/i.test(anchor.href || href)) {
+      var label = (anchor.getAttribute('data-item-name') || anchor.textContent || '').replace(/\s+/g, ' ').trim();
+      track('paypal_click', { item_name: label || paypalItemName() });
+      return;
+    }
+    if (isSocialProfile(anchor)) {
+      var platform = platformFromUrl(anchor.href);
+      if (platform) track('social_click', { platform: platform });
+    }
+  }
+
+  function initAnalytics() {
+    window.desanyaTrack = track;
+    document.addEventListener('submit', function (event) {
+      var form = event.target;
+      if (!form || form.tagName !== 'FORM' || !isFormSubmit(form)) return;
+      track('generate_lead', { form_name: formName(form) });
+    });
+    document.addEventListener('click', onTrackedClick, true);
+  }
+
   function init() {
     initNav();
     initYear();
@@ -382,6 +493,7 @@ var DESANYA_LINKS = {
     initSocial();
     initLightbox();
     initGalleryFilters();
+    initAnalytics();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
