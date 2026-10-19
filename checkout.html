@@ -992,7 +992,7 @@
     </div>
   </div>
 
-  <script src="site.js?v=16" defer></script>
+  <script src="site.js?v=17" defer></script>
   <script>
     window.addEventListener('load', function () {
       var s = document.createElement('script');
@@ -1126,6 +1126,15 @@
         window.paypal.Buttons({
           style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'paypal' },
           onClick: function (data, actions) {
+            var itemName = '';
+            try {
+              var cartItems = window.DesanyaCart && window.DesanyaCart.getItems && window.DesanyaCart.getItems();
+              if (cartItems && cartItems.length) {
+                itemName = cartItems.map(function (item) { return item && item.name; }).filter(Boolean).join(', ');
+              }
+            } catch (err) {}
+            if (!itemName) itemName = (window.location.pathname || '').split('/').filter(Boolean).pop() || 'checkout';
+            if (window.desanyaTrack) window.desanyaTrack('paypal_click', { item_name: itemName });
             return validCustomer() ? actions.resolve() : actions.reject();
           },
           createOrder: function (data, actions) {
