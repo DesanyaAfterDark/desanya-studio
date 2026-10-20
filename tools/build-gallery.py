@@ -176,7 +176,8 @@ def card(item, lazy):
     frame = frame_markup(item, lazy)
 
     if item.get("external"):
-        label = f'{item["title"]} on Instagram, opens in a new tab'
+        place = "YouTube" if "youtu" in item["external"].lower() else "Instagram"
+        label = f'{item["title"]} on {place}, opens in a new tab'
         body = (
             f'            <a class="gallery-link" href="{esc(item["external"])}" '
             f'target="_blank" rel="noopener" aria-label="{esc(label)}">\n'
@@ -300,6 +301,10 @@ def load():
             continue
         if item.get("external"):
             require_file(item["image"], title)
+            if item.get("webp"):
+                require_file(item["webp"], title)
+            if item.get("webp720"):
+                require_file(item["webp720"], title)
             if item.get("zoomHref"):
                 require_file(item["zoomHref"], title)
             if not item["external"].startswith("https://"):

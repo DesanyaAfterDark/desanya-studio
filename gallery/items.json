@@ -366,6 +366,20 @@
       ]
     },
     {
+      "title": "Welcome to Desanya Studio: Web Design for Small Businesses",
+      "group": "brand-identity",
+      "tag": "YouTube",
+      "external": "https://youtu.be/WvOnGietScI",
+      "image": "assets/youtube-welcome.jpg",
+      "webp": "assets/youtube-welcome.webp",
+      "webp720": "assets/youtube-welcome-720.webp",
+      "webpWidth": 1280,
+      "width": 1280,
+      "height": 720,
+      "alt": "Welcome to Desanya Studio: Web Design for Small Businesses",
+      "caption": "Welcome to Desanya Studio: Web Design for Small Businesses"
+    },
+    {
       "title": "YouTube channel banner",
       "group": "brand-identity",
       "tag": "YouTube",
