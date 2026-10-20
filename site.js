@@ -449,6 +449,176 @@ var DESANYA_LINKS = {
     apply(hashId(), false);
   }
 
+  /* ---------- Best-of coverflow ---------- */
+  function initCoverflow() {
+    var stage = document.querySelector('[data-cover]');
+    if (!stage) return;
+    var cards = Array.prototype.slice.call(stage.querySelectorAll('[data-cover-card]'));
+    if (!cards.length) return;
+    var live = document.querySelector('[data-cover-live]');
+    var coverIndex = 0;
+    var timer = 0;
+    var onScreen = true;
+    var announced = false;
+    var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var phoneQuery = window.matchMedia('(max-width: 700px)');
+
+    function reduced() {
+      return motionQuery.matches;
+    }
+
+    function arm(img) {
+      if (!img) return;
+      var pending = img.getAttribute('data-src');
+      if (!pending) return;
+      img.src = pending;
+      img.removeAttribute('data-src');
+    }
+
+    function offsetOf(i) {
+      var n = cards.length;
+      var offset = i - coverIndex;
+      if (offset > n / 2) offset -= n;
+      if (offset < -n / 2) offset += n;
+      return offset;
+    }
+
+    function layout() {
+      var flat = reduced();
+      cards.forEach(function (card, i) {
+        var offset = offsetOf(i);
+        var abs = Math.abs(offset);
+        card.dataset.offset = String(offset);
+        card.style.zIndex = String(30 - abs);
+        card.style.opacity = abs > 2 ? '0' : (abs === 0 ? '1' : abs === 1 ? '0.95' : '0.4');
+        card.style.pointerEvents = abs > 1 ? 'none' : 'auto';
+        card.tabIndex = -1;
+        card.setAttribute('aria-hidden', offset === 0 ? 'false' : 'true');
+        if (flat) {
+          card.style.transform = 'translate(-50%, -50%) translateX(' + (offset * 110) + '%) scale(' + (offset === 0 ? '1' : '0.92') + ')';
+        } else {
+          var shift = offset * 46;
+          var turn = offset * -52;
+          var depth = offset === 0 ? 160 : -120;
+          var scale = offset === 0 ? 1.12 : 0.78;
+          card.style.transform = 'translate(-50%, -50%) translateX(' + shift + '%) rotateY(' + turn + 'deg) translateZ(' + depth + 'px) scale(' + scale + ')';
+        }
+        if (abs <= 2) arm(card.querySelector('img'));
+      });
+      if (live) {
+        var title = (cards[coverIndex].querySelector('span') || {}).textContent || '';
+        title = title.replace(/\s+/g, ' ').trim();
+        var message = title + ', ' + (coverIndex + 1) + ' of ' + cards.length;
+        if (announced) live.textContent = message;
+        announced = true;
+      }
+    }
+
+    function canPlay() {
+      var dialog = document.getElementById('lightbox');
+      if (reduced() || phoneQuery.matches || document.hidden || !onScreen) return false;
+      if (dialog && dialog.open) return false;
+      if (stage.matches(':hover') || stage.contains(document.activeElement)) return false;
+      return true;
+    }
+
+    function queue() {
+      window.clearInterval(timer);
+      timer = 0;
+      if (!canPlay()) return;
+      timer = window.setInterval(function () { step(1); }, 5000);
+    }
+
+    function step(delta) {
+      coverIndex = (coverIndex + delta + cards.length) % cards.length;
+      layout();
+    }
+
+    stage.querySelector('[data-cover-prev]').addEventListener('click', function () {
+      step(-1);
+      queue();
+    });
+    stage.querySelector('[data-cover-next]').addEventListener('click', function () {
+      step(1);
+      queue();
+    });
+
+    stage.addEventListener('click', function (e) {
+      var card = e.target.closest('[data-cover-card]');
+      if (!card) return;
+      var index = cards.indexOf(card);
+      if (offsetOf(index) !== 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        coverIndex = index;
+        layout();
+        queue();
+        return;
+      }
+      window.clearInterval(timer);
+      timer = 0;
+    }, true);
+
+    stage.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        step(-1);
+        queue();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        step(1);
+        queue();
+      } else if ((e.key === 'Enter' || e.key === ' ') && e.target === stage) {
+        e.preventDefault();
+        cards[coverIndex].click();
+      }
+    });
+
+    var touchX = 0;
+    var touchY = 0;
+    var tracking = false;
+    stage.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+    stage.addEventListener('touchend', function (e) {
+      if (!tracking || !e.changedTouches.length) return;
+      tracking = false;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - touchX;
+      var dy = t.clientY - touchY;
+      if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+      step(dx < 0 ? 1 : -1);
+      queue();
+    }, { passive: true });
+
+    stage.addEventListener('mouseenter', function () { window.clearInterval(timer); timer = 0; });
+    stage.addEventListener('mouseleave', queue);
+    stage.addEventListener('focusin', function () { window.clearInterval(timer); timer = 0; });
+    stage.addEventListener('focusout', queue);
+    document.addEventListener('visibilitychange', queue);
+    if (phoneQuery.addEventListener) phoneQuery.addEventListener('change', queue);
+    if (motionQuery.addEventListener) {
+      motionQuery.addEventListener('change', function () {
+        layout();
+        queue();
+      });
+    }
+    var dialog = document.getElementById('lightbox');
+    if (dialog) dialog.addEventListener('close', queue);
+    if ('IntersectionObserver' in window) {
+      var watcher = new IntersectionObserver(function (entries) {
+        onScreen = entries[0].isIntersecting;
+        queue();
+      }, { threshold: 0.35 });
+      watcher.observe(stage);
+    }
+    layout();
+    queue();
+  }
+
   /* ---------- GA4 conversion events (existing gtag only) ---------- */
   function track(name, params) {
     if (typeof window.gtag !== 'function') return;
@@ -569,6 +739,7 @@ var DESANYA_LINKS = {
     initReviews();
     initSocial();
     initLightbox();
+    initCoverflow();
     initGalleryFilters();
     initAnalytics();
   }

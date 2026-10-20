@@ -24,7 +24,6 @@ MARK = re.compile(
     re.S,
 )
 SIZES = "(max-width: 639px) 92vw, (max-width: 959px) 46vw, 340px"
-BEST_SIZES = "(max-width: 639px) 42vw, 180px"
 
 
 def esc(value):
@@ -255,38 +254,62 @@ def card(item, lazy):
     return f'          <li class="gallery-card">\n{body}{frames}{outbound_links(item)}\n          </li>'
 
 
+def cover_href(item):
+    if item.get("href"):
+        return item["href"]
+    return item.get("zoomHref") or item["image"]
+
+
+def cover_caption(item):
+    return item.get("caption") or item.get("zoomCaption") or item["title"]
+
+
+def cover_thumb(item):
+    return item.get("webp720") or item.get("webp") or item["image"]
+
+
 def best_html(data, by_id, lazy_state):
     titles = data.get("bestOf") or []
     if not titles:
         return ""
     by_title = {item["title"]: item for item in data["items"]}
-    lines = [
-        '    <section class="gallery-best" aria-labelledby="gallery-best-heading">',
-        '      <h2 id="gallery-best-heading">Best of</h2>',
-        "      <p>Eight pieces from the groups below. Each one opens that group.</p>",
-        '      <ul class="gallery-best-row">',
-    ]
-    for title in titles:
+    total = len(titles)
+    cards = []
+    for index, title in enumerate(titles):
         item = by_title[title]
-        group = by_id[item["group"]]
-        lazy = lazy_state["used"]
-        lazy_state["used"] = True
-        lines.append("        <li>")
-        lines.append(
-            f'          <a class="gallery-best-link" href="#{esc(group["id"])}">'
+        distance = min(index, total - index)
+        near = distance <= 2
+        thumb = cover_thumb(item)
+        src_attr = f'src="{esc(thumb)}"' if near else f'data-src="{esc(thumb)}"'
+        priority = ""
+        if index == 0:
+            priority = ' fetchpriority="high"'
+            lazy_state["used"] = True
+        view = viewer_webp(item)
+        view_attr = f' data-webp="{esc(view)}"' if view else ""
+        cards.append(
+            f'        <a class="cover-card" data-cover-card href="{esc(cover_href(item))}" '
+            f'data-lightbox data-lb-set="best-of" data-caption="{esc(cover_caption(item))}" '
+            f'data-alt="{esc(item["alt"])}"{view_attr}>\n'
+            f'          <img {src_attr} alt="" width="{int(item["width"])}" height="{int(item["height"])}"'
+            f'{priority} decoding="async">\n'
+            f'          <span>{esc(item["title"])}</span>\n'
+            "        </a>"
         )
-        lines.append(frame_markup(item, lazy, BEST_SIZES))
-        lines.append(
-            f'            <span class="gallery-best-title">{esc(item["title"])}</span>'
-        )
-        lines.append(
-            f'            <span class="visually-hidden">, {esc(group["name"])}</span>'
-        )
-        lines.append("          </a>")
-        lines.append("        </li>")
-    lines.append("      </ul>")
-    lines.append("    </section>")
-    return "\n".join(lines)
+    return "\n".join([
+        '    <section class="gallery-cover" aria-labelledby="gallery-best-heading">',
+        '      <h2 id="gallery-best-heading">Best of</h2>',
+        "      <p>Eight pieces in a row. Swipe, or use the arrow keys. The centre piece opens full size.</p>",
+        '      <div class="cover-stage" data-cover tabindex="0" aria-roledescription="carousel" aria-label="Best pieces">',
+        *cards,
+        '        <div class="cover-nav">',
+        '          <button type="button" data-cover-prev aria-label="Previous piece">‹</button>',
+        '          <button type="button" data-cover-next aria-label="Next piece">›</button>',
+        "        </div>",
+        "      </div>",
+        '      <p class="visually-hidden" data-cover-live aria-live="polite"></p>',
+        "    </section>",
+    ])
 
 
 def group_html(group, items, lazy_state):
