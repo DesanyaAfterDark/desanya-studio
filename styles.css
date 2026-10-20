@@ -2843,6 +2843,81 @@ a:hover {
 }
 
 .page-section--flush-top { padding-top: 0.5rem; }
+
+/* Esports page: gremlin art is mood only. The header and footer stay the studio brand. */
+.esports-hero { overflow: hidden; }
+
+.esports-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+}
+
+.esports-hero-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 62%;
+}
+
+.esports-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(13, 10, 29, 0.92) 0%, rgba(13, 10, 29, 0.88) 48%, rgba(13, 10, 29, 0.55) 70%, rgba(13, 10, 29, 0.32) 100%),
+    linear-gradient(180deg, rgba(13, 10, 29, 0.2), rgba(13, 10, 29, 0.35) 70%, var(--bg));
+  pointer-events: none;
+}
+
+.esports-hero .container { position: relative; z-index: 2; }
+
+.draft-flag {
+  display: inline-block;
+  margin: 0 0 1rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--warm);
+  border-radius: var(--radius-pill);
+  color: var(--focus);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.esports-own {
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border-left: 3px solid var(--accent);
+  color: var(--text);
+  background: var(--accent-soft);
+}
+
+.esports-shots {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.esports-shots figure { margin: 0; }
+
+.esports-shots img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.esports-shots figcaption {
+  margin-top: 0.4rem;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
 .page-section--tight { padding-top: clamp(1.5rem, 4vw, 2.5rem); }
 
 /* ---------- Work page ---------- */
@@ -4700,6 +4775,10 @@ a[data-google-review-link][hidden],
   .hero-proof-row { grid-template-columns: 1fr; }
   .proof-card { grid-template-columns: 1fr; }
   .case-card { grid-template-columns: 1fr; }
+  .esports-shots { grid-template-columns: 1fr; }
+  .esports-hero::after {
+    background: linear-gradient(180deg, rgba(13, 10, 29, 0.5) 0%, rgba(13, 10, 29, 0.84) 46%, var(--bg) 100%);
+  }
   .evolve-grid { grid-template-columns: 1fr; }
   .case-card-media { border-right: 0; border-bottom: 1px solid var(--border); }
   .follow-band { grid-template-columns: 1fr; }

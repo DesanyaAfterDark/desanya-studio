@@ -52,6 +52,11 @@
       "lede": "Logo designs for client businesses, with the brand board and an in-use frame in the viewer."
     },
     {
+      "id": "esports-gaming",
+      "name": "Esports & Gaming",
+      "lede": "Banners, mascots, and backdrops for streamers and teams. Duo After Dark is Cassandra’s own gaming duo with Kasama."
+    },
+    {
       "id": "social",
       "name": "Social",
       "lede": "Instagram pieces, including Reel covers. A series stays in episode order."
@@ -323,8 +328,8 @@
     },
     {
       "title": "Desanya’s e-sports banner",
-      "group": "brand-art",
-      "tag": "Brand art",
+      "group": "esports-gaming",
+      "tag": "Esports banner",
       "href": "assets/brand-art/desanya-wolf-mascot.jpg",
       "image": "assets/brand-art/desanya-wolf-mascot-display.jpg",
       "webp": "assets/brand-art/desanya-wolf-mascot-display.webp",
@@ -333,8 +338,38 @@
       "width": 1600,
       "height": 732,
       "alt": "Desanya’s e-sports banner: a magenta wolf head above the word DESANYA in bright green on a purple banner",
-      "caption": "Desanya’s e-sports banner: commissioned for the Desanya brand.",
-      "lbSet": "brand-art"
+      "caption": "Desanya’s e-sports banner: a gaming banner for the Desanya brand.",
+      "lbSet": "esports-gaming"
+    },
+    {
+      "title": "Duo After Dark gremlin mascots",
+      "group": "esports-gaming",
+      "tag": "Esports mascot",
+      "href": "assets/esports/duo-gremlin-mascots.jpg",
+      "image": "assets/esports/duo-gremlin-mascots.jpg",
+      "webp": "assets/esports/duo-gremlin-mascots.webp",
+      "webp720": "assets/esports/duo-gremlin-mascots-720.webp",
+      "webpWidth": 1024,
+      "width": 1024,
+      "height": 1024,
+      "alt": "Esports mascot logo for Duo After Dark: a purple gremlin holding a controller beside a teal gremlin in a gaming headset, with neon pink and cyan paint splashes",
+      "caption": "Duo After Dark gremlin mascots: Cassandra’s own gaming duo brand with Kasama, handle @duoafterdarktv.",
+      "lbSet": "esports-gaming"
+    },
+    {
+      "title": "Duo After Dark neon city",
+      "group": "esports-gaming",
+      "tag": "Stream backdrop",
+      "href": "assets/esports/duo-gremlin-city.jpg",
+      "image": "assets/esports/duo-gremlin-city.jpg",
+      "webp": "assets/esports/duo-gremlin-city.webp",
+      "webp720": "assets/esports/duo-gremlin-city-720.webp",
+      "webpWidth": 1280,
+      "width": 1280,
+      "height": 720,
+      "alt": "Neon city backdrop for a YouTube gaming banner and custom Twitch overlay: a purple and cyan skyline across dark water, with pixel icons of a controller, an alien, and a heart",
+      "caption": "Duo After Dark neon city: a backdrop for stream overlays and YouTube gaming banners. Cassandra’s own brand with Kasama.",
+      "lbSet": "esports-gaming"
     },
     {
       "title": "Upside down & downside up",
