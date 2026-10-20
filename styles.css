@@ -175,9 +175,10 @@ a:hover {
 }
 
 .brand-logo {
-  height: 50px;
-  width: auto;
+  height: 44px;
+  width: 44px;
   border-radius: 10px;
+  object-fit: cover;
   flex-shrink: 0;
   display: block;
 }
@@ -191,8 +192,9 @@ a:hover {
 }
 
 .brand-name {
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.15rem;
   letter-spacing: -0.02em;
 }
 
@@ -960,9 +962,10 @@ a:hover {
 }
 
 .footer-logo {
-  height: 40px;
-  width: auto;
-  border-radius: 8px;
+  height: 48px;
+  width: 48px;
+  border-radius: 10px;
+  object-fit: cover;
   flex-shrink: 0;
   display: block;
 }
@@ -1166,6 +1169,22 @@ a:hover {
   padding: 0.95rem 1rem;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
+}
+
+.chat-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
 }
 
 .chat-panel-title {
@@ -1688,7 +1707,8 @@ a:hover {
     background: var(--bg);
   }
 
-  .brand-logo { height: 40px; border-radius: 8px; }
+  .brand-logo { height: 40px; width: 40px; border-radius: 9px; }
+  .brand-name { font-size: 1.02rem; }
 
   .nav-toggle {
     display: inline-flex;

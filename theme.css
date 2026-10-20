@@ -103,15 +103,15 @@ a:hover { color: #f7c1ea; }
 /* ---------- Header ---------- */
 .site-header { background: var(--bg-header); }
 .site-header::after { background: var(--hairline); opacity: 0.8; }
-/* New transparent wordmark (assets/desanya-wordmark-inline.*): no tile, so no radius or shadow */
+/* Dragonfly D mark (assets/desanya-mark.*): square tile in the header */
 .brand-logo {
-  height: 50px;
-  width: auto;
-  border-radius: 0;
+  height: 44px;
+  width: 44px;
+  border-radius: 10px;
   box-shadow: none;
 }
 @media (max-width: 820px) {
-  .brand-logo { height: 42px; border-radius: 0; }
+  .brand-logo { height: 40px; width: 40px; border-radius: 9px; }
 }
 
 .site-nav a { color: var(--text-muted); letter-spacing: 0; }
@@ -529,8 +529,8 @@ a:hover { color: #f7c1ea; }
 .footer-heading { color: var(--gold-soft); letter-spacing: 0.16em; }
 .footer-bottom { border-top-color: var(--border); }
 .footer-links a:hover { color: var(--accent-strong); }
-/* Stacked wordmark (assets/desanya-wordmark.*) in the footer */
-.footer-logo { height: 64px; width: auto; border-radius: 0; box-shadow: none; }
+/* Dragonfly D mark beside the footer name */
+.footer-logo { height: 48px; width: 48px; border-radius: 10px; box-shadow: none; }
 
 /* ---------- Gallery tiles (existing grid) ---------- */
 .gallery-item { border-radius: var(--radius); }
