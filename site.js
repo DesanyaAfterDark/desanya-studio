@@ -412,9 +412,25 @@ var DESANYA_LINKS = {
         group.hidden = id !== 'all' && group.getAttribute('data-gallery-group') !== id;
       });
       var pressed = bar.querySelector('[aria-pressed="true"]');
-      if (pressed && pressed.scrollIntoView) {
-        var motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        pressed.scrollIntoView({ inline: 'center', block: 'nearest', behavior: motion ? 'auto' : 'smooth' });
+      // Scroll the chip inside the bar only. scrollIntoView also scrolls the
+      // page, which on load slid the hero up under the sticky header.
+      if (pressed) {
+        var pad = 8;
+        var left = pressed.offsetLeft - pad;
+        var right = pressed.offsetLeft + pressed.offsetWidth + pad;
+        var viewLeft = bar.scrollLeft;
+        var viewRight = viewLeft + bar.clientWidth;
+        var next = viewLeft;
+        if (left < viewLeft) next = Math.max(0, left);
+        else if (right > viewRight) next = right - bar.clientWidth;
+        if (Math.abs(next - viewLeft) > 1) {
+          var motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (typeof bar.scrollTo === 'function') {
+            bar.scrollTo({ left: next, behavior: motion ? 'auto' : 'smooth' });
+          } else {
+            bar.scrollLeft = next;
+          }
+        }
       }
       if (live && announce) {
         live.textContent = id === 'all'

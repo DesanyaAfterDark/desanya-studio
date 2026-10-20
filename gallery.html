@@ -43,7 +43,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/site.min.css?v=21">
+  <link rel="stylesheet" href="assets/site.min.css?v=22">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -766,6 +766,7 @@
     <section class="gallery-cover" aria-labelledby="gallery-best-heading">
       <h2 id="gallery-best-heading">Best of</h2>
       <p>Eight pieces in a row. Swipe, or use the arrow keys. The centre piece opens full size.</p>
+      <div class="cover-clip">
       <div class="cover-stage" data-cover tabindex="0" aria-roledescription="carousel" aria-label="Best pieces">
         <a class="cover-card" data-cover-card href="assets/logo-variations/dragonfly-d.png" data-lightbox data-lb-set="best-of" data-caption="Dragonfly D — the square mark for Desanya Studio." data-alt="Desanya Studio dragonfly D logo: a stylized letter D drawn as a dragonfly, with pink and magenta wings, gold edges, and a gold body, on black" data-webp="assets/logo-variations/dragonfly-d.webp">
           <img src="assets/logo-variations/dragonfly-d-720.webp" alt="" width="1024" height="1024" fetchpriority="high" decoding="async">
@@ -803,6 +804,7 @@
           <button type="button" data-cover-prev aria-label="Previous piece">‹</button>
           <button type="button" data-cover-next aria-label="Next piece">›</button>
         </div>
+      </div>
       </div>
       <p class="visually-hidden" data-cover-live aria-live="polite"></p>
     </section>
@@ -1973,7 +1975,7 @@
     </div>
   </div>
 
-  <script src="site.js?v=19" defer></script>
+  <script src="site.js?v=20" defer></script>
   <script>
     window.addEventListener('load', function () {
       var s = document.createElement('script');

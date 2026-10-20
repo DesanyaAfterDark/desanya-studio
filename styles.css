@@ -3244,11 +3244,19 @@ a:hover {
   color: var(--text-muted);
 }
 
+/* Clip sits outside the perspective element. overflow on the same element as
+   perspective does not contain preserve-3d cards, and Chrome then grows the
+   scrollable overflow above the header. */
+.cover-clip {
+  margin-top: 0.9rem;
+  overflow: clip;
+  border-radius: var(--radius);
+}
+
 .cover-stage {
   position: relative;
   height: min(62vh, 560px);
   min-height: 280px;
-  margin-top: 0.9rem;
   perspective: 1200px;
   overflow: hidden;
   touch-action: pan-y;
@@ -3260,7 +3268,7 @@ a:hover {
 
 .cover-stage:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 3px;
+  outline-offset: -4px;
 }
 
 .cover-card {
