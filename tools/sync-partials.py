@@ -29,6 +29,7 @@ PAGES = {
     "404.html": ("", True),
     "thanks/index.html": ("", True),
     "checkout.html": ("", False),
+    "esports-gaming/index.html": ("esports", True),
     "knoxville-web-design.html": ("", False),
     "local-seo-google-business-profile.html": ("", False),
     "social-media-management.html": ("", False),
