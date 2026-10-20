@@ -3164,13 +3164,25 @@ a:hover {
 
 /* ---------- Gallery ---------- */
 .gallery-filters {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 30;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
-  margin: 0 0 2rem;
+  margin: 0 0 1.5rem;
+  padding: 0.65rem 0;
+  overflow-x: auto;
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(10px);
+  scrollbar-width: none;
 }
 
+.gallery-filters::-webkit-scrollbar { display: none; }
+
 .gallery-filters button {
+  flex: 0 0 auto;
   min-height: 44px;
   padding: 0.4rem 0.95rem;
   border: 1px solid var(--border-strong);
@@ -3194,6 +3206,53 @@ a:hover {
 .gallery-filters button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.gallery-best { margin: 0 0 1.25rem; }
+
+.gallery-best h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.gallery-best > p {
+  margin: 0.35rem 0 0;
+  max-width: 40rem;
+  color: var(--text-muted);
+}
+
+.gallery-best-row {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.9rem 0 0;
+  padding: 0 0 0.35rem;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+}
+
+.gallery-best-row > li {
+  flex: 0 0 9.25rem;
+  scroll-snap-align: start;
+}
+
+.gallery-best-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.gallery-best-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .gallery-group { margin: 0 0 2.75rem; }
@@ -3259,6 +3318,7 @@ a:hover {
 
 .gallery-frame {
   display: grid;
+  aspect-ratio: 1;
   background: var(--bg-soft);
   overflow: hidden;
 }
@@ -3402,6 +3462,7 @@ a:hover {
   width: 100vw;
   height: 100vh;
   max-width: none;
+  touch-action: pan-y;
   max-height: none;
   margin: 0;
   padding: 0;
@@ -3445,6 +3506,15 @@ a:hover {
   text-align: center;
   font-size: 0.92rem;
   color: var(--text-muted);
+}
+
+.lightbox-count {
+  margin: -0.35rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
 }
 
 .lightbox-btn {
@@ -4586,5 +4656,8 @@ a[data-google-review-link][hidden],
   .nav-toggle-bar { transition: none; }
   .path-card:hover,
   .gallery-link:hover img { transform: none; }
+  .lightbox-img,
+  .gallery-best-link img { transition: none; }
+  .gallery-best-link:hover img { transform: none; }
   .hero-art { transform: none; }
 }

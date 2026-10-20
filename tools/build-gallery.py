@@ -24,6 +24,7 @@ MARK = re.compile(
     re.S,
 )
 SIZES = "(max-width: 639px) 92vw, (max-width: 959px) 46vw, 340px"
+BEST_SIZES = "(max-width: 639px) 42vw, 180px"
 
 
 def esc(value):
@@ -95,32 +96,66 @@ def logo_background(item):
     return f"#{red:02x}{green:02x}{blue:02x}"
 
 
-def frame_markup(item, lazy):
+def webp_sibling(url):
+    """A same-name .webp next to a JPEG or PNG, when that file is on disk."""
+    if not url or url.startswith("http://") or url.startswith("https://"):
+        return ""
+    path = url.split("?", 1)[0]
+    if path.lower().endswith(".webp"):
+        return url
+    sibling = str(Path(path).with_suffix(".webp"))
+    if (ROOT / sibling).is_file():
+        return sibling
+    return ""
+
+
+def viewer_webp(item):
+    """Widest WebP for the viewer. A 720 file can be wider than a 512 icon WebP."""
+    webp = item.get("webp") or ""
+    webp720 = item.get("webp720") or ""
+    if webp and webp720:
+        full_w = int(item.get("webpWidth") or item["width"])
+        return webp if full_w > 720 else webp720
+    return webp or webp720 or webp_sibling(item.get("href") or item.get("zoomHref") or "")
+
+
+def webp_attr(url):
+    found = url if str(url).lower().split("?", 1)[0].endswith(".webp") else webp_sibling(url)
+    if not found:
+        return ""
+    return f' data-webp="{esc(found)}"'
+
+
+def frame_markup(item, lazy, sizes=None):
     classes = "gallery-frame"
-    style = f"aspect-ratio: {int(item['width'])} / {int(item['height'])}"
+    style = ""
     if is_logo(item):
         classes += " gallery-frame--logo"
-        style += f"; --frame-bg: {logo_background(item)}"
+        style = f' style="--frame-bg: {logo_background(item)}"'
     return (
-        f'            <span class="{classes}" style="{style}">\n'
-        f"              {picture(item, lazy)}\n"
+        f'            <span class="{classes}"{style}>\n'
+        f"              {picture(item, lazy, sizes)}\n"
         "            </span>"
     )
 
 
-def picture(item, lazy):
+def picture(item, lazy, sizes=None):
+    sizes = sizes or SIZES
     webp = item.get("webp")
     source = ""
     if webp:
+        width = int(item.get("webpWidth") or item["width"])
         webp720 = item.get("webp720")
-        if webp720:
-            width = item.get("webpWidth") or item["width"]
+        if webp720 and webp720.split("?", 1)[0] != webp.split("?", 1)[0]:
             source = (
                 f'<source type="image/webp" srcset="{esc(webp720)} 720w, '
-                f'{esc(webp)} {width}w" sizes="{SIZES}">'
+                f'{esc(webp)} {width}w" sizes="{esc(sizes)}">'
             )
         else:
-            source = f'<source type="image/webp" srcset="{esc(webp)}">'
+            source = (
+                f'<source type="image/webp" srcset="{esc(webp)} {width}w" '
+                f'sizes="{esc(sizes)}">'
+            )
     loading = ' loading="lazy"' if lazy else ' fetchpriority="high"'
     return (
         "<picture>\n"
@@ -149,7 +184,7 @@ def hidden_frame(frame, lb_set):
         f'<a class="visually-hidden" href="{esc(frame["href"])}" data-lightbox '
         f'data-lb-set="{esc(lb_set)}" data-caption="{esc(frame["caption"])}" '
         f'tabindex="-1" data-alt="{esc(frame["alt"])}" '
-        f'aria-label="{esc(frame["alt"])}"></a>'
+        f'aria-label="{esc(frame["alt"])}"{webp_attr(frame["href"])}></a>'
     )
 
 
@@ -186,11 +221,13 @@ def card(item, lazy):
         )
         extra = ""
         if item.get("zoomHref"):
+            zoom_webp = viewer_webp(item)
+            zoom_attr = f' data-webp="{esc(zoom_webp)}"' if zoom_webp else ""
             extra += (
                 f'\n            <a class="gallery-zoom" href="{esc(item["zoomHref"])}" '
                 f'data-lightbox data-alt="{esc(item.get("zoomAlt") or item["alt"])}" '
-                f'data-caption="{esc(item.get("zoomCaption") or item["title"])}" '
-                'aria-label="View larger">⤢</a>'
+                f'data-caption="{esc(item.get("zoomCaption") or item["title"])}"'
+                f'{zoom_attr} aria-label="View larger">⤢</a>'
             )
         if item.get("stepsHref"):
             extra += (
@@ -201,9 +238,11 @@ def card(item, lazy):
 
     lb = item.get("lbSet") or ""
     lb_attr = f' data-lb-set="{esc(lb)}"' if lb else ""
+    view = viewer_webp(item)
+    view_attr = f' data-webp="{esc(view)}"' if view else ""
     body = (
         f'            <a class="gallery-link" href="{esc(item["href"])}" data-lightbox'
-        f'{lb_attr} data-caption="{esc(item["caption"])}">\n'
+        f'{lb_attr} data-caption="{esc(item["caption"])}"{view_attr}>\n'
         f"{frame}\n{meta}\n"
         "            </a>"
     )
@@ -214,6 +253,40 @@ def card(item, lazy):
     if frames:
         frames = "\n" + frames
     return f'          <li class="gallery-card">\n{body}{frames}{outbound_links(item)}\n          </li>'
+
+
+def best_html(data, by_id, lazy_state):
+    titles = data.get("bestOf") or []
+    if not titles:
+        return ""
+    by_title = {item["title"]: item for item in data["items"]}
+    lines = [
+        '    <section class="gallery-best" aria-labelledby="gallery-best-heading">',
+        '      <h2 id="gallery-best-heading">Best of</h2>',
+        "      <p>Eight pieces from the groups below. Each one opens that group.</p>",
+        '      <ul class="gallery-best-row">',
+    ]
+    for title in titles:
+        item = by_title[title]
+        group = by_id[item["group"]]
+        lazy = lazy_state["used"]
+        lazy_state["used"] = True
+        lines.append("        <li>")
+        lines.append(
+            f'          <a class="gallery-best-link" href="#{esc(group["id"])}">'
+        )
+        lines.append(frame_markup(item, lazy, BEST_SIZES))
+        lines.append(
+            f'            <span class="gallery-best-title">{esc(item["title"])}</span>'
+        )
+        lines.append(
+            f'            <span class="visually-hidden">, {esc(group["name"])}</span>'
+        )
+        lines.append("          </a>")
+        lines.append("        </li>")
+    lines.append("      </ul>")
+    lines.append("    </section>")
+    return "\n".join(lines)
 
 
 def group_html(group, items, lazy_state):
@@ -324,6 +397,12 @@ def load():
                 raise SystemExit(f"outbound link must be https: {title}")
             if not link.get("label"):
                 raise SystemExit(f"outbound link needs a label: {title}")
+    for title in data.get("bestOf") or []:
+        match = next((item for item in items if item["title"] == title), None)
+        if match is None:
+            raise SystemExit(f"bestOf title missing: {title}")
+        if match.get("placeholder"):
+            raise SystemExit(f"bestOf cannot be a placeholder: {title}")
     groups.sort(key=lambda group: group["name"].casefold())
     return data, groups, by_id
 
@@ -335,13 +414,17 @@ def render(data, groups, by_id):
             f'      <button type="button" data-filter="{esc(group["id"])}" '
             f'aria-pressed="false">{esc(group["name"])}</button>'
         )
-    blocks = [
+    lazy_state = {"used": False}
+    blocks = []
+    best = best_html(data, by_id, lazy_state)
+    if best:
+        blocks.append(best)
+    blocks.extend([
         '    <nav class="gallery-filters" data-gallery-filters aria-label="Gallery groups">',
         "\n".join(buttons),
         "    </nav>",
         '    <p class="visually-hidden" data-gallery-live aria-live="polite"></p>',
-    ]
-    lazy_state = {"used": False}
+    ])
     ordered = []
     for group in groups:
         members = [item for item in data["items"] if item["group"] == group["id"]]

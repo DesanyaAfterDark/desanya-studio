@@ -282,20 +282,39 @@ var DESANYA_LINKS = {
 
     var img = dialog.querySelector('[data-lb-img]');
     var cap = dialog.querySelector('[data-lb-caption]');
+    var count = dialog.querySelector('[data-lb-count]');
     var prev = dialog.querySelector('[data-lb-prev]');
     var next = dialog.querySelector('[data-lb-next]');
     var index = 0;
     var opener = null;
     var active = links;
+    var touchX = 0;
+    var touchY = 0;
+    var tracking = false;
 
     function ensureImg() {
       if (img) return img;
       img = document.createElement('img');
       img.className = 'lightbox-img';
       img.alt = '';
+      img.decoding = 'async';
       var fig = dialog.querySelector('.lightbox-figure');
       fig.insertBefore(img, cap);
       return img;
+    }
+
+    function slideSrc(a) {
+      return a.getAttribute('data-webp') || a.getAttribute('href');
+    }
+
+    function preload(i) {
+      if (active.length < 2) return;
+      var a = active[(i + active.length) % active.length];
+      var src = slideSrc(a);
+      if (!src) return;
+      var ahead = new Image();
+      ahead.decoding = 'async';
+      ahead.src = src;
     }
 
     function show(i) {
@@ -303,9 +322,11 @@ var DESANYA_LINKS = {
       var a = active[index];
       var thumb = a.querySelector('img');
       var el = ensureImg();
-      el.src = a.getAttribute('href');
+      el.src = slideSrc(a);
       el.alt = (thumb && thumb.alt) || a.getAttribute('data-alt') || '';
       cap.textContent = a.getAttribute('data-caption') || '';
+      if (count) count.textContent = (index + 1) + ' of ' + active.length;
+      preload(index + 1);
     }
 
     function openSet(a) {
@@ -345,6 +366,24 @@ var DESANYA_LINKS = {
       document.body.classList.remove('lightbox-open');
       if (opener) opener.focus();
     });
+
+    dialog.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+      tracking = true;
+    }, { passive: true });
+
+    dialog.addEventListener('touchend', function (e) {
+      if (!tracking || !e.changedTouches.length) return;
+      tracking = false;
+      if (active.length < 2) return;
+      var t = e.changedTouches[0];
+      var dx = t.clientX - touchX;
+      var dy = t.clientY - touchY;
+      if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
+      show(index + (dx < 0 ? 1 : -1));
+    }, { passive: true });
   }
 
   function initGalleryFilters() {
@@ -353,23 +392,61 @@ var DESANYA_LINKS = {
     var buttons = Array.prototype.slice.call(bar.querySelectorAll('[data-filter]'));
     var groups = Array.prototype.slice.call(document.querySelectorAll('[data-gallery-group]'));
     var live = document.querySelector('[data-gallery-live]');
+    var ids = {};
+    groups.forEach(function (group) {
+      ids[group.getAttribute('data-gallery-group')] = true;
+    });
+
+    function hashId() {
+      var raw = (location.hash || '').replace(/^#/, '');
+      try { raw = decodeURIComponent(raw); } catch (err) { raw = ''; }
+      return ids[raw] ? raw : 'all';
+    }
+
+    function apply(id, announce) {
+      if (id !== 'all' && !ids[id]) id = 'all';
+      buttons.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', btn.getAttribute('data-filter') === id ? 'true' : 'false');
+      });
+      groups.forEach(function (group) {
+        group.hidden = id !== 'all' && group.getAttribute('data-gallery-group') !== id;
+      });
+      var pressed = bar.querySelector('[aria-pressed="true"]');
+      if (pressed && pressed.scrollIntoView) {
+        var motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        pressed.scrollIntoView({ inline: 'center', block: 'nearest', behavior: motion ? 'auto' : 'smooth' });
+      }
+      if (live && announce) {
+        live.textContent = id === 'all'
+          ? 'Showing every group, A to Z'
+          : 'Showing ' + (pressed ? pressed.textContent.trim() : id);
+      }
+    }
+
+    function writeHash(id) {
+      var next = id === 'all'
+        ? location.pathname + location.search
+        : location.pathname + location.search + '#' + id;
+      var current = location.pathname + location.search + location.hash;
+      if (current !== next) history.pushState(null, '', next);
+    }
+
     buttons.forEach(function (btn) {
       btn.addEventListener('click', function () {
         var id = btn.getAttribute('data-filter');
-        buttons.forEach(function (other) {
-          other.setAttribute('aria-pressed', other === btn ? 'true' : 'false');
-        });
-        groups.forEach(function (group) {
-          var match = id === 'all' || group.getAttribute('data-gallery-group') === id;
-          group.hidden = !match;
-        });
-        if (live) {
-          live.textContent = id === 'all'
-            ? 'Showing every group, A to Z'
-            : 'Showing ' + btn.textContent.trim();
-        }
+        writeHash(id);
+        apply(id, true);
       });
     });
+
+    window.addEventListener('hashchange', function () {
+      apply(hashId(), true);
+    });
+    window.addEventListener('popstate', function () {
+      apply(hashId(), true);
+    });
+
+    apply(hashId(), false);
   }
 
   /* ---------- GA4 conversion events (existing gtag only) ---------- */
