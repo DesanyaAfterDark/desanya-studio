@@ -4482,6 +4482,37 @@ a[data-google-review-link][hidden],
   display: block;
 }
 
+.youtube-feature {
+  display: block;
+  margin-top: 0.85rem;
+  max-width: 16rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  line-height: 0;
+}
+
+.youtube-feature img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.youtube-feature:hover {
+  border-color: rgba(217, 107, 192, 0.5);
+}
+
+.youtube-feature:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.chat-social .youtube-feature,
+.nav-social .youtube-feature,
+.social-block--contact .youtube-feature {
+  max-width: none;
+}
+
 /* ---------- Multi-page responsive ---------- */
 @media (max-width: 960px) {
   .principle-grid { grid-template-columns: repeat(2, 1fr); }
