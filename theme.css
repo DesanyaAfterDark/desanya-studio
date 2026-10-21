@@ -137,7 +137,7 @@ a:hover { color: #f7c1ea; }
       radial-gradient(80% 50% at 0% 0%, var(--plum-glow), transparent 70%),
       var(--bg);
   }
-  .site-nav a[aria-current="page"]::after { background: var(--gold); }
+  .site-nav a[aria-current="page"]::after { content: none; }
 }
 
 /* ---------- Type accents ---------- */
