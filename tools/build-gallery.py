@@ -299,7 +299,7 @@ def best_html(data, by_id, lazy_state):
     return "\n".join([
         '    <section class="gallery-cover" aria-labelledby="gallery-best-heading">',
         '      <h2 id="gallery-best-heading">Best of</h2>',
-        "      <p>Eight pieces in a row. Swipe, or use the arrow keys. The centre piece opens full size.</p>",
+        "      <p>Eight pieces in a row. Swipe, or use the arrow keys. The center piece opens full size.</p>",
         '      <div class="cover-clip">',
         '      <div class="cover-stage" data-cover tabindex="0" aria-roledescription="carousel" aria-label="Best pieces">',
         *cards,
