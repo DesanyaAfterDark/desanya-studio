@@ -4834,3 +4834,26 @@ a[data-google-review-link][hidden],
   .cover-card { transition: none; }
   .hero-art { transform: none; }
 }
+
+/* Phone tap targets. Padding and min-height only; type, color, and borders stay. */
+@media (max-width: 480px) {
+  .crumbs a,
+  .footer-links a,
+  .page-blog .jump-links a,
+  .hero-contact a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .page-contact .consent {
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .page-contact .consent input {
+    width: 24px;
+    height: 24px;
+    margin-top: 0;
+  }
+}
