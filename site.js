@@ -11,6 +11,7 @@
  *   Paste full https profile URLs for Desanya Studio. Leave '' to hide that icon.
  *   Instagram is https://www.instagram.com/desanyastudio/ (@desanyastudio).
  *   Facebook is https://www.facebook.com/desanyastudio.
+ *   Pinterest is https://www.pinterest.com/desanyastudio/.
  *   Threads is https://www.threads.com/@desanyastudio (@desanyastudio).
  *   TikTok is https://www.tiktok.com/@desanyastudio (@desanyastudio).
  *   X and LinkedIn stay hidden until a URL is pasted here.
@@ -24,6 +25,7 @@ var DESANYA_LINKS = {
     facebook: 'https://www.facebook.com/desanyastudio',
     instagram: 'https://www.instagram.com/desanyastudio/',
     linkedin: '',
+    pinterest: 'https://www.pinterest.com/desanyastudio/',
     threads: 'https://www.threads.com/@desanyastudio',
     tiktok: 'https://www.tiktok.com/@desanyastudio',
     x: '',
@@ -54,6 +56,11 @@ var DESANYA_LINKS = {
       key: 'linkedin',
       label: 'Desanya Studio on LinkedIn',
       svg: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.4 9.1H4v10.4h2.4V9.1zM5.2 4.2c-.9 0-1.5.6-1.5 1.4s.6 1.4 1.5 1.4 1.5-.6 1.5-1.4-.6-1.4-1.5-1.4zM20 19.5h-2.4v-5.4c0-1.4-.5-2.3-1.7-2.3-.9 0-1.5.6-1.7 1.2-.1.2-.1.5-.1.8v5.7H11.7V9.1h2.3v1.4c.4-.7 1.2-1.7 2.9-1.7 2.1 0 3.1 1.4 3.1 4.1v6.6z"/></svg>'
+    },
+    {
+      key: 'pinterest',
+      label: 'Desanya Studio on Pinterest',
+      svg: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.951-7.252 4.173 0 7.41 2.967 7.41 6.923 0 4.133-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.001 12.017 24.001c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z"/></svg>'
     },
     {
       key: 'threads',
@@ -670,6 +677,7 @@ var DESANYA_LINKS = {
     }
     if (host === 'facebook.com' || host === 'fb.com' || host === 'm.facebook.com') return 'facebook';
     if (host === 'instagram.com') return 'instagram';
+    if (host === 'pinterest.com') return 'pinterest';
     if (host === 'threads.com' || host === 'threads.net') return 'threads';
     if (host === 'tiktok.com') return 'tiktok';
     if (host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com') return 'youtube';
