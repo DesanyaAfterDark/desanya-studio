@@ -14,6 +14,7 @@
  *   Pinterest is https://www.pinterest.com/desanyastudio/.
  *   Threads is https://www.threads.com/@desanyastudio (@desanyastudio).
  *   TikTok is https://www.tiktok.com/@desanyastudio (@desanyastudio).
+ *   Twitch is https://www.twitch.tv/duoafterdarktv (@duoafterdarktv).
  *   X and LinkedIn stay hidden until a URL is pasted here.
  *   YouTube is https://www.youtube.com/@DesanyaStudio.
  *   Permanent channel ID, if the handle ever breaks: UCwcgZihQYLXfixWSYFdqEmw.
@@ -28,6 +29,7 @@ var DESANYA_LINKS = {
     pinterest: 'https://www.pinterest.com/desanyastudio/',
     threads: 'https://www.threads.com/@desanyastudio',
     tiktok: 'https://www.tiktok.com/@desanyastudio',
+    twitch: 'https://www.twitch.tv/duoafterdarktv',
     x: '',
     // Permanent channel ID, if this handle ever breaks: UCwcgZihQYLXfixWSYFdqEmw
     youtube: 'https://www.youtube.com/@DesanyaStudio'
@@ -71,6 +73,11 @@ var DESANYA_LINKS = {
       key: 'tiktok',
       label: 'Desanya Studio on TikTok',
       svg: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14.2 3h2.2a5.2 5.2 0 0 0 3.4 3.2v2.3a7.4 7.4 0 0 1-3.4-1v6.7a5.7 5.7 0 1 1-5.7-5.7c.3 0 .6 0 .9.1v2.5a3.2 3.2 0 1 0 2.2 3.1V3z"/></svg>'
+    },
+    {
+      key: 'twitch',
+      label: 'Desanya Studio on Twitch',
+      svg: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0 1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>'
     },
     {
       key: 'x',
@@ -680,6 +687,7 @@ var DESANYA_LINKS = {
     if (host === 'pinterest.com') return 'pinterest';
     if (host === 'threads.com' || host === 'threads.net') return 'threads';
     if (host === 'tiktok.com') return 'tiktok';
+    if (host === 'twitch.tv') return 'twitch';
     if (host === 'youtube.com' || host === 'youtu.be' || host === 'm.youtube.com') return 'youtube';
     if (host === 'linkedin.com' || host.slice(-13) === '.linkedin.com') return 'linkedin';
     if (host === 'x.com' || host === 'twitter.com') return 'x';
