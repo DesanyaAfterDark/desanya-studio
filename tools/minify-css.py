@@ -10,7 +10,7 @@ import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SOURCES = ["styles.css", "theme.css", "assets/cart.css"]
+SOURCES = ["styles.css", "theme.css", "assets/cart.css", "neon-bento.css"]
 OUT = ROOT / "assets" / "site.min.css"
 
 
