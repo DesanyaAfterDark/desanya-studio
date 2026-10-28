@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Desanya Studio — "Neon Bento" layer (Oct 2026). Loaded last via site.min.css.
+   Modular tiles on navy/plum, magenta glow, gold highlights. Tokens come from
+   styles.css/theme.css (no new colours). Services tiers use glass "price chips".
+   ========================================================================== */
+:root {
+  --nb-radius: 24px;
+  --nb-radius-sm: 16px;
+  --nb-gap: clamp(14px, 2vw, 20px);
+  --nb-tile: linear-gradient(180deg, rgba(30, 24, 57, .78), rgba(23, 18, 47, .92));
+  --nb-glow: radial-gradient(640px 320px at 92% -10%, rgba(217, 107, 192, .26), transparent 70%);
+  --nb-line: 1px solid var(--border);
+}
+body { background: radial-gradient(1100px 620px at 85% -8%, rgba(217,107,192,.16), transparent 65%), radial-gradient(900px 600px at -10% 40%, rgba(70,45,140,.22), transparent 70%), var(--bg); background-attachment: fixed; }
+
+/* Generic tile treatment for existing cards site-wide */
+.price-card, .path-card, .proof-card, .principle, .work-card, .case-card, .booking-card,
+.direct-card, .checkout-card, .topic-group, .post-grid > li, .faq details, .evolve-card,
+.gallery-card, .esports-hero, .service-copy, .bento-tile, .review-card, .review-form,
+.post-body, .page-hero .container, .cta-band-inner {
+  border-radius: var(--nb-radius);
+}
+.price-card, .path-card, .proof-card, .principle, .work-card, .case-card, .booking-card,
+.direct-card, .checkout-card, .topic-group, .post-grid > li, .evolve-card, .bento-tile {
+  background: var(--nb-glow), var(--nb-tile);
+  border: var(--nb-line);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 18px 50px rgba(0,0,0,.28);
+  transition: border-color .2s ease, transform .2s ease;
+}
+.path-card:hover, .work-card--link:hover, .post-grid > li:hover, .price-card:hover { border-color: var(--accent); }
+.path-card:hover { transform: translateY(-2px); }
+
+/* Page heroes become a large hero tile */
+.page-hero > .container {
+  background: var(--nb-glow), var(--nb-tile);
+  border: var(--nb-line);
+  padding: clamp(28px, 5vw, 56px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+.page-hero { padding-top: clamp(20px, 4vw, 40px); }
+
+/* Home ---------------------------------------------------------------- */
+.hero--home > .container {
+  background: var(--nb-glow), var(--nb-tile);
+  border: var(--nb-line);
+  border-radius: var(--nb-radius);
+  padding: clamp(24px, 4.5vw, 56px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+.hero-art--brand {
+  display: grid; place-items: center;
+  min-height: 300px;
+  padding: clamp(20px, 3vw, 36px);
+  border-radius: var(--nb-radius);
+  border: var(--nb-line);
+  background: radial-gradient(closest-side, rgba(238,156,219,.28), transparent 75%), var(--bg-elevated);
+  box-shadow: 0 0 0 1px rgba(245,192,74,.08), 0 0 60px rgba(217,107,192,.18);
+  transform: none !important; aspect-ratio: auto !important;
+}
+.hero-art--brand img { width: 100%; max-width: 440px; height: auto; object-fit: contain; border-radius: 0; box-shadow: none; filter: drop-shadow(0 10px 30px rgba(217,107,192,.35)); }
+.hero-art--brand::before, .hero-art--brand::after { display: none !important; }
+
+.bento-grid--home {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--nb-gap);
+  padding-block: clamp(20px, 4vw, 40px);
+}
+.bento-grid--home > .bento-tile { padding: clamp(22px, 3vw, 32px); margin: 0; }
+.bento-grid--home > .bento-tile > .container { max-width: none; padding: 0; margin: 0; width: auto; }
+.bento-grid--home .about-grid { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: var(--nb-gap); }
+.bento-tile--about { grid-column: span 4; }
+.bento-tile--area { grid-column: span 2; }
+.bento-tile--tech { grid-column: span 2; }
+.bento-tile--follow { grid-column: span 4; }
+.bento-grid--home .service-area { text-align: left; max-width: none; }
+.bento-grid--home .service-counties { justify-content: flex-start; }
+.bento-grid--home h2 { font-size: clamp(1.5rem, 2.4vw, 2rem); }
+.bento-tile--tech .section-lede { margin-inline: 0; text-align: left; }
+.skill-list--chips { display: flex !important; flex-wrap: wrap; gap: 8px; padding: 0; margin: 14px 0 0; list-style: none; grid-template-columns: none !important; }
+.skill-list--chips li { margin: 0; }
+.skill-list--chips li > span, .skill-list--chips li > a {
+  display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: .875rem;
+  border: 1px solid var(--border-strong); background: rgba(13,10,29,.5); color: var(--text);
+}
+.skill-list--chips li > a { color: var(--accent-strong); text-decoration: none; }
+.skill-list--chips li > a:hover { border-color: var(--accent); }
+.skill-more { margin-top: 14px; }
+.skill-more summary { cursor: pointer; color: var(--text-muted); font-weight: 600; }
+.path-grid { gap: var(--nb-gap); }
+.path-card { padding: 24px; }
+.path-price { color: var(--accent-strong); }
+.band--proof .proof-card { padding: clamp(24px, 4vw, 44px); }
+.proof-stats dt { color: var(--warm); }
+.band--instagram[hidden], [data-google-review-pending] { display: none !important; }
+
+/* Services: glass price chips ---------------------------------------- */
+.price-grid { gap: var(--nb-gap); }
+.price-card { padding: clamp(20px, 3vw, 28px); }
+.price-card .price-from { color: var(--warm); }
+.tier-grid { gap: 10px; }
+.tier {
+  background: rgba(13, 10, 29, .5);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid rgba(238, 156, 219, .22);
+  border-radius: var(--nb-radius-sm);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  padding: 14px;
+}
+.tier .tier-name {
+  display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase;
+  background: rgba(217,107,192,.14); border: 1px solid rgba(217,107,192,.35); color: var(--accent-strong); margin: 0 0 8px; width: fit-content; align-self: flex-start; justify-self: start;
+}
+.tier .price-amount { color: var(--text); }
+.tier .tier-meta { color: var(--text-dim); font-size: .8125rem; }
+
+/* Blog, forms, misc --------------------------------------------------- */
+.post-body { background: var(--nb-tile); border: var(--nb-line); padding: clamp(20px, 4vw, 48px); }
+.faq details { background: var(--nb-tile); border: var(--nb-line); padding: 14px 18px; margin-bottom: 10px; }
+.cta-band-inner { background: linear-gradient(135deg, rgba(184,84,160,.55), rgba(58,31,92,.9)); border: var(--nb-line); padding: clamp(28px, 5vw, 56px); }
+.form-field input, .form-field select, .form-field textarea, .checkout-field input { border-radius: 12px; }
+.btn { border-radius: 999px; }
+
+@media (max-width: 860px) {
+  .bento-grid--home { grid-template-columns: minmax(0, 1fr); }
+  .bento-tile--about, .bento-tile--area, .bento-tile--tech, .bento-tile--follow { grid-column: auto; }
+  .bento-grid--home .about-grid { grid-template-columns: minmax(0, 1fr); }
+  .hero-art--brand { min-height: 200px; }
+}
+@media (prefers-reduced-motion: reduce) { .path-card, .price-card { transition: none; } .path-card:hover { transform: none; } }
