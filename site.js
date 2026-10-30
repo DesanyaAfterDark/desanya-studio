@@ -400,6 +400,27 @@ var DESANYA_LINKS = {
     }, { passive: true });
   }
 
+  function initServiceFilters() {
+    var nav = document.querySelector('[data-service-filters]');
+    if (!nav) return;
+    var cards = document.querySelectorAll('[data-service-cat]');
+    var status = document.querySelector('[data-service-status]');
+    var buttons = nav.querySelectorAll('[data-filter]');
+    function apply(cat) {
+      var shown = 0;
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === cat)); });
+      cards.forEach(function (c) {
+        var on = cat === 'all' || c.getAttribute('data-service-cat') === cat;
+        c.hidden = !on;
+        if (on) shown++;
+      });
+      if (status) status.textContent = 'Showing ' + shown + (shown === 1 ? ' package' : ' packages');
+    }
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { apply(b.getAttribute('data-filter')); });
+    });
+  }
+
   function initGalleryFilters() {
     var bar = document.querySelector('[data-gallery-filters]');
     if (!bar) return;
@@ -773,6 +794,7 @@ var DESANYA_LINKS = {
     initLightbox();
     initCoverflow();
     initGalleryFilters();
+    initServiceFilters();
     initAnalytics();
   }
 

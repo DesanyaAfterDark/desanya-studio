@@ -1701,10 +1701,6 @@ a:hover {
   }
 }
 
-@media (min-width: 821px) {
-  .gallery-grid:has(> li:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
 @media (max-width: 820px) {
   .site-header {
     z-index: 400;

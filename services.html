@@ -44,7 +44,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/site.min.css?v=27">
+  <link rel="stylesheet" href="assets/site.min.css?v=30">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -837,8 +837,17 @@
         <header class="group-header">
           <h2 id="packages-heading">Packages</h2>
         </header>
+        <nav class="gallery-filters service-filters" aria-label="Filter packages by category" data-service-filters>
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="ai" aria-pressed="false">AI &amp; search</button>
+          <button type="button" data-filter="content" aria-pressed="false">Content &amp; copy</button>
+          <button type="button" data-filter="design" aria-pressed="false">Design &amp; brand</button>
+          <button type="button" data-filter="marketing" aria-pressed="false">Marketing &amp; local</button>
+          <button type="button" data-filter="websites" aria-pressed="false">Websites</button>
+        </nav>
+        <p class="visually-hidden" aria-live="polite" data-service-status></p>
         <div class="price-grid">
-          <article class="price-card" id="ad-landing">
+          <article class="price-card" id="ad-landing" data-service-cat="websites">
           <h3>Ad landing page</h3>
           <p class="price-from">From $400</p>
           <p class="price-card-desc">You will get one page aimed at a single offer. You approve it before it goes live.</p>
@@ -847,23 +856,24 @@
             <p class="price"><span class="price-amount">$400</span></p>
             <p class="tier-meta">5-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Copy supplied by you</li><li>One page, one offer</li><li>Headline, proof, and a call to action</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$600</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Copy written for the offer</li><li>One page, one offer</li><li>You approve before it goes live</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$900</span></p>
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Standard</li><li>A form and analytics</li><li>One A/B variant of the page</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="ai">
+        </article><article class="price-card" id="ai" data-service-cat="ai">
           <h3>AI for your business</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">A FAQ chatbot or a small workflow for your business. You approve it before it goes live. The chat on this website stays a canned FAQ.</p>
@@ -872,41 +882,43 @@
             <p class="price"><span class="price-amount">$400</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>FAQ chatbot trained on up to 25 Q&As</li><li>You approve before go-live</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$750</span></p>
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>FAQ chatbot</li><li>One workflow automation</li><li>Staff training notes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$1,200</span></p>
             <p class="tier-meta">14-day delivery · 2 revisions</p>
             <ul class="price-list"><li>FAQ chatbot</li><li>Two workflow automations</li><li>Staff training notes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-premium">Book / Order</button>
           </div></div><h4 class="price-pair-label">Managing</h4><div class="tier-grid"><div class="tier">
             <p class="tier-name">Basic</p>
             <p class="price"><span class="price-amount">$150</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly · 1 tweak round</p>
             <ul class="price-list"><li>Review of answers and prompts</li><li>Changes stay in draft until you approve</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$200</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly · 2 tweak rounds</p>
             <ul class="price-list"><li>Answer, flow, and prompt tweaks</li><li>Changes stay in draft until you approve</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$250</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly · tweaks plus a flow check</p>
             <ul class="price-list"><li>Ongoing answer and prompt tweaks</li><li>One workflow check</li><li>You approve before changes go live</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-premium">Book / Order</button>
           </div></div>
           <p class="price-more"><a class="text-link" href="ai-for-small-business.html">AI for small business <span aria-hidden="true">→</span></a></p>
           
-        </article><article class="price-card" id="ai-search">
+        </article><article class="price-card" id="ai-search" data-service-cat="ai">
           <h3>AI search &amp; site audit</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">You will get a prioritized fix list: page titles, speed, schema, and how the site shows up in AI answers. No ranking promise.</p>
@@ -915,23 +927,24 @@
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">3-day delivery · 1 revision</p>
             <ul class="price-list"><li>Crawl of up to 5 pages</li><li>Titles, meta, PageSpeed, and schema check</li><li>AI-answer visibility notes</li><li>Google Doc of fixes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$300</span></p>
             <p class="tier-meta">5-day delivery · 1 revision</p>
             <ul class="price-list"><li>Full-site crawl</li><li>Competitor check</li><li>Prioritized fix list</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$500</span></p>
             <p class="tier-meta">7-day delivery · 1 revision</p>
             <ul class="price-list"><li>Everything in Standard</li><li>Fixes applied on a GitHub Pages site</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="blog">
+        </article><article class="price-card" id="blog" data-service-cat="content">
           <h3>Blog writing</h3>
           <p class="price-from">From $120</p>
           <p class="price-card-desc">SEO-friendly posts you approve before they publish. Standard posts are about 1,000–1,500 words and include a featured image made in Canva.</p>
@@ -940,23 +953,24 @@
             <p class="price"><span class="price-amount">$120</span></p>
             <p class="tier-meta">5-day delivery · 1 revision</p>
             <ul class="price-list"><li>About 800 words</li><li>You approve before publish</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$200</span></p>
             <p class="tier-meta">5-day delivery · 1 revision</p>
             <ul class="price-list"><li>About 1,000–1,500 words</li><li>Canva featured image</li><li>You approve before publish</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$700</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">4 posts a month · 1 revision each</p>
             <ul class="price-list"><li>Four Standard posts each month</li><li>Featured image on each</li><li>You approve before publish</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-monthly">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-monthly">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="brand">
+        </article><article class="price-card" id="brand" data-service-cat="design">
           <h3>Brand refresh kit</h3>
           <p class="price-from">From $450</p>
           <p class="price-card-desc">A refresh of the look you already have — not a new logo from scratch. Editable Canva files are included.</p>
@@ -965,11 +979,11 @@
             <p class="price"><span class="price-amount">$450</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Logo refresh as PNG and SVG</li><li>Color and type sheet</li><li>5 Canva social templates</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="brand-refresh">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="brand-refresh">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="canva">
+        </article><article class="price-card" id="canva" data-service-cat="design">
           <h3>Canva social template pack</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">Branded, editable Canva templates for posts, stories, and highlight covers.</p>
@@ -978,23 +992,24 @@
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">3-day delivery · 2 revisions</p>
             <ul class="price-list"><li>10 templates</li><li>Canva link included</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$275</span></p>
             <p class="tier-meta">5-day delivery · 2 revisions</p>
             <ul class="price-list"><li>20 templates</li><li>Canva link included</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$400</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>30 templates</li><li>Canva brand kit setup</li><li>Canva link included</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="email">
+        </article><article class="price-card" id="email" data-service-cat="content">
           <h3>Email newsletter template</h3>
           <p class="price-from">From $125</p>
           <p class="price-card-desc">A responsive email template plus the copy that goes in it.</p>
@@ -1003,28 +1018,30 @@
             <p class="price"><span class="price-amount">$125</span></p>
             <p class="tier-meta">3-day delivery · 2 revisions</p>
             <ul class="price-list"><li>1 responsive template</li><li>Copy for that template</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$350</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Template and copy</li><li>A 3–5 email welcome sequence</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$600</span></p>
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Standard</li><li>Setup in your free-tier email tool</li><li>A signup form</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="esports">
+        </article><article class="price-card" id="esports" data-service-cat="design">
           <h3>Esports &amp; Gaming</h3>
           <p class="price-from">From $75</p>
           <p class="price-card-desc">Custom Twitch overlays, YouTube gaming banners, Twitch emotes, and esports mascot logos. These packages are not in the cart yet.</p>
+          <p class="price-cta"><a class="btn btn-primary btn-small" href="contact.html#order">Book / Order</a></p>
           <p class="price-more"><a class="text-link" href="esports-gaming/">Esports &amp; Gaming <span aria-hidden="true">→</span></a></p>
-        </article><article class="price-card" id="gbp">
+        </article><article class="price-card" id="gbp" data-service-cat="marketing">
           <h3>Google Business Profile tune-up</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">A standalone tune-up, smaller than full SEO setup. Desanya Studio needs Manager access on the profile.</p>
@@ -1033,23 +1050,24 @@
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">3-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Categories and services</li><li>Description</li><li>Photos</li><li>4 starter Google Posts</li><li>Q&amp;A</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$250</span></p>
             <p class="tier-meta">5-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Basic</li><li>5 local citations</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$400</span></p>
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Standard</li><li>30 days of Google Posts</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-premium">Book / Order</button>
           </div></div>
           <p class="price-more"><a class="text-link" href="local-seo-google-business-profile.html">Local SEO &amp; Google Business Profile <span aria-hidden="true">→</span></a></p>
           
-        </article><article class="price-card" id="care">
+        </article><article class="price-card" id="care" data-service-cat="websites">
           <h3>Monthly care</h3>
           <p class="price-from">From $99</p>
           <p class="price-card-desc">A light caretaker for a site that is already live.</p>
@@ -1058,17 +1076,17 @@
             <p class="price"><span class="price-amount">$99</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly</p>
             <ul class="price-list"><li>Up to 1 hour of edits</li><li>Uptime check</li><li>Monthly backup</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="monthly-care">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="monthly-care">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Plus</p>
             <p class="price"><span class="price-amount">$179</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly</p>
             <ul class="price-list"><li>Up to 2 hours of edits</li><li>Uptime check and backup</li><li>One Google Business Profile post</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="monthly-care-plus">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="monthly-care-plus">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="photo">
+        </article><article class="price-card" id="photo" data-service-cat="design">
           <h3>Photo &amp; gallery polish</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">Cleanup and a clearer gallery for a local shop or breeder site, using photos you already have.</p>
@@ -1077,17 +1095,17 @@
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">5-day delivery · 1 revision</p>
             <ul class="price-list"><li>Up to 15 photos</li><li>Cleanup and gallery layout</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="photo-basic">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="photo-basic">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$300</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Up to 40 photos</li><li>Cleanup and gallery layout</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="photo-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="photo-standard">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="deck">
+        </article><article class="price-card" id="deck" data-service-cat="design">
           <h3>Pitch deck</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">A Google Slides or Canva deck built from an outline you provide.</p>
@@ -1096,23 +1114,24 @@
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">3-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Up to 8 slides</li><li>From your outline</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$300</span></p>
             <p class="tier-meta">5-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Up to 15 slides</li><li>From your outline</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$500</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Up to 25 slides</li><li>Speaker notes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="descriptions">
+        </article><article class="price-card" id="descriptions" data-service-cat="content">
           <h3>Product &amp; service descriptions</h3>
           <p class="price-from">From $60</p>
           <p class="price-card-desc">Short SEO descriptions for a shop, an Etsy listing, or a breeder’s litters.</p>
@@ -1121,23 +1140,24 @@
             <p class="price"><span class="price-amount">$60</span></p>
             <p class="tier-meta">2-day delivery · 1 revision</p>
             <ul class="price-list"><li>5 descriptions</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">4-day delivery · 1 revision</p>
             <ul class="price-list"><li>15 descriptions</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$275</span></p>
             <p class="tier-meta">6-day delivery · 1 revision</p>
             <ul class="price-list"><li>30 descriptions</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="reels">
+        </article><article class="price-card" id="reels" data-service-cat="design">
           <h3>Reels pack</h3>
           <p class="price-from">From $75</p>
           <p class="price-card-desc">Your footage edited into Reels or Shorts, with captions and a branded end card. Editing client footage is the default. AI-generated footage is only used when you ask for it.</p>
@@ -1146,23 +1166,24 @@
             <p class="price"><span class="price-amount">$75</span></p>
             <p class="tier-meta">2-day delivery · 2 revisions</p>
             <ul class="price-list"><li>1 Reel or Short</li><li>Captions and a branded end card</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$300</span></p>
             <p class="tier-meta">5-day delivery · 2 revisions</p>
             <ul class="price-list"><li>5 Reels or Shorts</li><li>Captions and a branded end card</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$550</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>10 Reels or Shorts</li><li>Captions and a branded end card</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="review">
+        </article><article class="price-card" id="review" data-service-cat="marketing">
           <h3>Review generation kit</h3>
           <p class="price-from">From $200</p>
           <p class="price-card-desc">A way for customers to leave a Google review. It uses your Google review link. It does not invent ratings or gate reviews.</p>
@@ -1171,11 +1192,11 @@
             <p class="price"><span class="price-amount">$200</span></p>
             <p class="tier-meta">5-day delivery · 1 revision</p>
             <ul class="price-list"><li>Google review QR code</li><li>Printable card</li><li>Email and text ask templates</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="review-generation-kit">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="review-generation-kit">Book / Order</button>
           </div></div>
           
           <p class="form-note">Pairs with the Google Business Profile tune-up. Nothing is published until Desanya Studio approves it.</p>
-        </article><article class="price-card" id="seo">
+        </article><article class="price-card" id="seo" data-service-cat="marketing">
           <h3>SEO &amp; Google</h3>
           <p class="price-from">From $450</p>
           <p class="price-card-desc">On-site SEO setup, plus monthly checks. For a smaller start, see the Google Business Profile tune-up and the AI search &amp; site audit. There is no guaranteed ranking.</p>
@@ -1184,17 +1205,17 @@
             <p class="price"><span class="price-amount">$550</span></p>
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>On-site titles and meta</li><li>Basic on-site SEO</li><li>AI-search visibility notes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="seo-setup">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="seo-setup">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Managing</p>
             <p class="price"><span class="price-amount">$450</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly report</p>
             <ul class="price-list"><li>Listing updates</li><li>Visibility checks</li><li>A short monthly report</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="seo-managing">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="seo-managing">Book / Order</button>
           </div></div>
           <p class="price-more"><a class="text-link" href="local-seo-google-business-profile.html">Local SEO &amp; Google Business Profile <span aria-hidden="true">→</span></a></p>
           
-        </article><article class="price-card" id="training">
+        </article><article class="price-card" id="training" data-service-cat="websites">
           <h3>Site update training</h3>
           <p class="price-from">From $125</p>
           <p class="price-card-desc">A remote session so you can update your own site, plus notes you can keep.</p>
@@ -1203,17 +1224,17 @@
             <p class="price"><span class="price-amount">$125</span></p>
             <p class="tier-meta">Scheduled within 7 days</p>
             <ul class="price-list"><li>1-hour remote session</li><li>Written notes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="training-basic">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="training-basic">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$225</span></p>
             <p class="tier-meta">Two sessions</p>
             <ul class="price-list"><li>Two remote sessions</li><li>Written notes</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="training-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="training-standard">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="ad-copy">
+        </article><article class="price-card" id="ad-copy" data-service-cat="content">
           <h3>Social ad copy pack</h3>
           <p class="price-from">From $100</p>
           <p class="price-card-desc">Headlines, primary text, and call-to-action variants for Meta or Google ads.</p>
@@ -1222,23 +1243,24 @@
             <p class="price"><span class="price-amount">$100</span></p>
             <p class="tier-meta">2-day delivery · 2 revisions</p>
             <ul class="price-list"><li>1 ad set</li><li>5 copy variants</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$200</span></p>
             <p class="tier-meta">4-day delivery · 2 revisions</p>
             <ul class="price-list"><li>3 ad sets</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$350</span></p>
             <p class="tier-meta">6-day delivery · 2 revisions</p>
             <ul class="price-list"><li>3 ad sets</li><li>A landing-page copy tweak</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-premium">Book / Order</button>
           </div></div>
           
           
-        </article><article class="price-card" id="social">
+        </article><article class="price-card" id="social" data-service-cat="marketing">
           <h3>Social media</h3>
           <p class="price-from">From $350</p>
           <p class="price-card-desc">Setup gets the profiles in shape. Managing is scheduled posting through Buffer. You approve posts before they go out.</p>
@@ -1247,29 +1269,30 @@
             <p class="price"><span class="price-amount">$550</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Profiles, bio, and highlights</li><li>A starter content map</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-setup">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-setup">Book / Order</button>
           </div></div><h4 class="price-pair-label">Managing</h4><div class="tier-grid"><div class="tier">
             <p class="tier-name">Basic</p>
             <p class="price"><span class="price-amount">$350</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">12 posts · 1 platform</p>
             <ul class="price-list"><li>Scheduled in Buffer</li><li>You approve before posting</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$600</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">20 posts · 2 platforms</p>
             <ul class="price-list"><li>Scheduled in Buffer</li><li>You approve before posting</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$850</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Posts, Reels, and light engagement</p>
             <ul class="price-list"><li>Everything in Standard</li><li>Reels</li><li>Light engagement</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-premium">Book / Order</button>
           </div></div>
           <p class="price-more"><a class="text-link" href="social-media-management.html">Social media management <span aria-hidden="true">→</span></a></p>
           
-        </article><article class="price-card" id="website">
+        </article><article class="price-card" id="website" data-service-cat="websites">
           <h3>Website</h3>
           <p class="price-from">From $900</p>
           <p class="price-card-desc">A mobile-first site on GitHub Pages, on a domain you own. Clear calls to action and basic on-page SEO.</p>
@@ -1278,23 +1301,24 @@
             <p class="price"><span class="price-amount">$900</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>1-page site</li><li>Mobile-first layout</li><li>GitHub Pages hosting</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-basic">Add to cart</button>
-          </div><div class="tier">
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-basic">Book / Order</button>
+          </div><div class="tier tier--highlight">
+            <p class="tier-badge">Highlight · Balanced pick</p>
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$1,600</span></p>
             <p class="tier-meta">14-day delivery · 3 revisions</p>
             <ul class="price-list"><li>Up to 5 pages</li><li>Calls to action</li><li>Basic on-page SEO and titles</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-standard">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Premium</p>
             <p class="price"><span class="price-amount">$2,500</span></p>
             <p class="tier-meta">21-day delivery · 3 revisions</p>
             <ul class="price-list"><li>Up to 10 pages</li><li>Blog setup</li><li>Page copy included</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-premium">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-premium">Book / Order</button>
           </div></div>
           <p class="price-more"><a class="text-link" href="knoxville-web-design.html">Knoxville web design <span aria-hidden="true">→</span></a></p>
           
-        </article><article class="price-card" id="copy">
+        </article><article class="price-card" id="copy" data-service-cat="content">
           <h3>Website copywriting</h3>
           <p class="price-from">From $150</p>
           <p class="price-card-desc">Headlines, page copy, and calls to action in your voice. Formerly listed as Content.</p>
@@ -1303,13 +1327,13 @@
             <p class="price"><span class="price-amount">$150</span></p>
             <p class="tier-meta">5-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Copy for 1 page</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="copy-basic">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="copy-basic">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Standard</p>
             <p class="price"><span class="price-amount">$400</span></p>
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Copy for up to 3 pages</li><li>Headlines and calls to action</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="copy-standard">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="copy-standard">Book / Order</button>
           </div></div>
           
           
@@ -1330,19 +1354,19 @@
             <p class="price"><span class="price-amount">$200</span></p>
             <p class="tier-meta">Added to a website or landing page</p>
             <ul class="price-list"><li>One additional page</li><li>Same approval rule as the package</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="extra-page">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="extra-page">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Extra revision round</p>
             <p class="price"><span class="price-amount">$40</span></p>
             <p class="tier-meta">One more round of changes</p>
             <ul class="price-list"><li>Applies to the draft you were sent</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="extra-revision">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="extra-revision">Book / Order</button>
           </div><div class="tier">
             <p class="tier-name">Rush delivery</p>
             <p class="price"><span class="price-amount">+35%</span></p>
             <p class="tier-meta">Under half the listed delivery time · +35%</p>
             <ul class="price-list"><li>35% of the one-time items in the cart</li><li>Monthly packages are not marked up</li></ul>
-            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="rush">Add to cart</button>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="rush">Book / Order</button>
           </div>
         </div>
       </div>
@@ -1715,7 +1739,7 @@
     </div>
   </div>
 
-  <script src="site.js?v=23" defer></script>
+  <script src="site.js?v=24" defer></script>
   <script>
     window.addEventListener('load', function () {
       var s = document.createElement('script');

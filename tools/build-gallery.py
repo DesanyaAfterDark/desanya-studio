@@ -314,14 +314,32 @@ def best_html(data, by_id, lazy_state):
     ])
 
 
+def bento_layout(n):
+    """Pick featured (2x2) tiles so every bento row fills with no gaps.
+
+    Desktop uses 4 columns, tablet 2: a feature takes 4 cells, so we need
+    (n + 3f) % 4 == 0 and (n - f) even. Groups of 3 or fewer get an exact
+    column count instead.
+    """
+    if n <= 3:
+        return {"grid": f"gallery-grid--{n}", "features": set()}
+    for f in range(0, n + 1):
+        if (n + 3 * f) % 4 == 0 and (n - f) % 2 == 0:
+            break
+    features = {round(k * n / f) for k in range(f)} if f else set()
+    return {"grid": "gallery-grid--bento", "features": features}
+
+
 def group_html(group, items, lazy_state):
     parts = [
-        f'    <section class="gallery-group" id="{esc(group["id"])}" '
+        f'    <section class="gallery-group{" gallery-group--featured" if group.get("featured") else ""}" id="{esc(group["id"])}" '
         f'data-gallery-group="{esc(group["id"])}" '
         f'aria-labelledby="gallery-{esc(group["id"])}">',
         '      <header class="gallery-group-head">',
         f'        <h2 id="gallery-{esc(group["id"])}">{esc(group["name"])}</h2>',
     ]
+    if group.get("eyebrow"):
+        parts.insert(2, f'        <p class="gallery-eyebrow">{esc(group["eyebrow"])}</p>')
     if group.get("lede"):
         parts.append(f'        <p>{esc(group["lede"])}</p>')
     if group.get("note"):
@@ -332,11 +350,24 @@ def group_html(group, items, lazy_state):
             parts.append(f"          <li>{esc(spec)}</li>")
         parts.append("        </ul>")
     parts.append("      </header>")
-    parts.append('      <ul class="gallery-grid">')
-    for item in items:
+    layout = bento_layout(len(items))
+    # Reel cards (external links) keep their own layout, so feature the
+    # next still image instead.
+    picked = set()
+    for index in sorted(layout["features"]):
+        while index < len(items) and (items[index].get("external") or index in picked):
+            index += 1
+        if index < len(items):
+            picked.add(index)
+    layout["features"] = picked
+    parts.append(f'      <ul class="gallery-grid {layout["grid"]}">')
+    for index, item in enumerate(items):
         lazy = lazy_state["used"]
         lazy_state["used"] = True
-        parts.append(card(item, lazy=lazy))
+        markup = card(item, lazy=lazy)
+        if index in layout["features"]:
+            markup = markup.replace('<li class="gallery-card', '<li class="gallery-card gallery-card--feature', 1)
+        parts.append(markup)
     parts.append("      </ul>")
     parts.append("    </section>")
     return "\n".join(parts)
@@ -428,7 +459,8 @@ def load():
             raise SystemExit(f"bestOf title missing: {title}")
         if match.get("placeholder"):
             raise SystemExit(f"bestOf cannot be a placeholder: {title}")
-    groups.sort(key=lambda group: group["name"].casefold())
+    # Featured sets (e.g. a seasonal hero set) go first; the rest stay A-Z.
+    groups.sort(key=lambda group: (not group.get("featured"), group["name"].casefold()))
     return data, groups, by_id
 
 
@@ -441,6 +473,12 @@ def render(data, groups, by_id):
         )
     lazy_state = {"used": False}
     blocks = []
+    featured_blocks = []
+    for group in [g for g in groups if g.get("featured")]:
+        members = sorted((i for i in data["items"] if i["group"] == group["id"]), key=item_key)
+        if members:
+            featured_blocks.append(group_html(group, members, lazy_state))
+    blocks.extend(featured_blocks)
     best = best_html(data, by_id, lazy_state)
     if best:
         blocks.append(best)
@@ -457,7 +495,8 @@ def render(data, groups, by_id):
         if not members:
             continue
         ordered.extend(members)
-        blocks.append(group_html(group, members, lazy_state))
+        if not group.get("featured"):
+            blocks.append(group_html(group, members, lazy_state))
     commission = data["commission"]
     blocks.append(
         '    <aside class="gallery-commission">\n'
