@@ -549,7 +549,7 @@
     var btn = document.querySelector('.ds-cart-btn');
     var nav = document.querySelector('.site-nav');
     if (!btn || !nav) return;
-    if (window.innerWidth < 821) {
+    if (window.innerWidth < 1160) {
       btn.style.position = '';
       btn.style.top = '';
       btn.style.right = '';
