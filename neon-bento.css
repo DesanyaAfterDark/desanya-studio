@@ -207,3 +207,25 @@ main > .container:first-child { padding-top: clamp(2rem, 5vw, 3.5rem); padding-b
 .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
 main img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) { .btn, .btn:hover { transition: none; transform: none; } }
+
+/* Featured story hero on the blog index (Halloween 2026) */
+.featured-story { margin: 0 0 clamp(28px, 5vw, 56px); }
+.featured-story-label { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-strong); margin: 0 0 12px; }
+.post-card--hero { display: grid; grid-template-columns: 1fr; }
+.post-card--hero .post-card-title { font-size: clamp(1.6rem, 3.6vw, 2.6rem); line-height: 1.1; }
+.post-card--hero .post-card-excerpt { font-size: 1.05rem; }
+.post-card-more { display: inline-block; margin-top: 12px; font-weight: 600; color: var(--accent-strong); }
+@media (min-width: 960px) {
+  .post-card--hero { grid-template-columns: 3fr 2fr; align-items: center; }
+  .post-card--hero picture, .post-card--hero img { height: 100%; }
+  .post-card--hero img { object-fit: cover; }
+  .post-card--hero .post-card-body { padding: clamp(20px, 3vw, 40px); }
+}
+/* Crew cards in the Halloween post */
+.crew-grid { list-style: none; padding: 0; margin: 24px 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.post-body .crew-grid li { margin: 0; }
+.crew-card { border: var(--nb-line, 1px solid rgba(255,255,255,.15)); border-radius: 16px; padding: 14px; height: 100%; }
+.crew-card img { width: 100%; height: auto; border-radius: 12px; display: block; }
+.crew-card h3 { margin: 12px 0 2px; font-size: 1.1rem; }
+.post-body .crew-card p { margin: 4px 0 0; font-size: .95rem; }
+.post-body .crew-role { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }

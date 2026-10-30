@@ -62,6 +62,26 @@ def card(post, lazy):
     )
 
 
+def hero(post):
+    return (
+        '        <section class="featured-story" aria-labelledby="featured-heading">\n'
+        '          <h2 id="featured-heading" class="featured-story-label">Featured story</h2>\n'
+        f'          <a class="post-card post-card--hero" href="/blog/{esc(post["slug"])}/">\n'
+        "            <picture>\n"
+        f'              <source type="image/webp" srcset="{esc(post["imageWebp"])}">\n'
+        f'              <img src="{esc(post["image"])}" alt="{esc(post["imageAlt"])}" width="1600" height="900" fetchpriority="high" decoding="async">\n'
+        "            </picture>\n"
+        '            <span class="post-card-body">\n'
+        f'              <time class="post-card-date" datetime="{esc(post["date"])}">{esc(pretty_date(post["date"]))}</time>\n'
+        f'              <span class="post-card-title">{esc(post["title"])}</span>\n'
+        f'              <span class="post-card-excerpt">{esc(post["excerpt"])}</span>\n'
+        '              <span class="post-card-more" aria-hidden="true">Read the story →</span>\n'
+        "            </span>\n"
+        "          </a>\n"
+        "        </section>"
+    )
+
+
 def cards(posts, start_lazy):
     lines = []
     for index, post in enumerate(posts):
@@ -111,6 +131,10 @@ def index_html(topics, posts):
             (post for post in posts if post["date"] == latest),
             key=lambda post: post["title"].casefold(),
         )
+    featured = [post for post in posts if post.get("featured")]
+    for post in featured:
+        parts.append(hero(post))
+    newest = [post for post in newest if not post.get("featured")]
     if newest:
         parts.append(
             '        <section class="newest-block" aria-labelledby="newest-heading">\n'
@@ -153,7 +177,7 @@ def index_html(topics, posts):
             f'            <p class="topic-service"><a href="{esc(topic["serviceHref"])}">{esc(topic["serviceLabel"])}</a></p>\n'
             "          </header>\n"
             '          <ul class="post-grid">\n'
-            + cards(group, start_lazy=bool(newest))
+            + cards(group, start_lazy=bool(newest or featured))
             + "\n          </ul>\n"
             "        </section>"
         )

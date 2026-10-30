@@ -770,11 +770,48 @@
     <section class="page-section page-section--flush-top" aria-label="Posts">
       <div class="container">
         <!-- @blog-index -->
+        <section class="featured-story" aria-labelledby="featured-heading">
+          <h2 id="featured-heading" class="featured-story-label">Featured story</h2>
+          <a class="post-card post-card--hero" href="/blog/meet-our-spooky-ai-crew/">
+            <picture>
+              <source type="image/webp" srcset="/assets/blog/post-spooky-ai-crew.webp?v=1">
+              <img src="/assets/blog/post-spooky-ai-crew.jpg?v=1" alt="Ten spooky-cute Halloween avatars for Desanya Studio’s AI helpers on a navy background, in neon pink, plum and lavender" width="1600" height="900" fetchpriority="high" decoding="async">
+            </picture>
+            <span class="post-card-body">
+              <time class="post-card-date" datetime="2026-10-30">October 30, 2026</time>
+              <span class="post-card-title">Meet our spooky AI crew</span>
+              <span class="post-card-excerpt">Desanya Studio’s 10 AI helpers dressed up for Halloween 2026. Meet each one, see its costume, and learn the real job it does behind the scenes.</span>
+              <span class="post-card-more" aria-hidden="true">Read the story →</span>
+            </span>
+          </a>
+        </section>
         <nav class="jump-links" aria-label="Topics">
+          <a href="#ai">AI</a>
           <a href="#google-business-profile">Google Business Profile</a>
           <a href="#seo">SEO</a>
           <a href="#websites">Websites</a>
         </nav>
+        <section class="topic-group" id="ai" aria-labelledby="topic-ai">
+          <header class="topic-group-head">
+            <h2 id="topic-ai">AI</h2>
+            <p class="topic-service"><a href="/ai-for-small-business.html">AI for small business</a></p>
+          </header>
+          <ul class="post-grid">
+          <li>
+            <a class="post-card" href="/blog/meet-our-spooky-ai-crew/">
+              <picture>
+                <source type="image/webp" srcset="/assets/blog/post-spooky-ai-crew.webp?v=1">
+                <img src="/assets/blog/post-spooky-ai-crew.jpg?v=1" alt="Ten spooky-cute Halloween avatars for Desanya Studio’s AI helpers on a navy background, in neon pink, plum and lavender" width="1600" height="900" loading="lazy" decoding="async">
+              </picture>
+              <span class="post-card-body">
+                <time class="post-card-date" datetime="2026-10-30">October 30, 2026</time>
+                <span class="post-card-title">Meet our spooky AI crew</span>
+                <span class="post-card-excerpt">Desanya Studio’s 10 AI helpers dressed up for Halloween 2026. Meet each one, see its costume, and learn the real job it does behind the scenes.</span>
+              </span>
+            </a>
+          </li>
+          </ul>
+        </section>
         <section class="topic-group" id="google-business-profile" aria-labelledby="topic-google-business-profile">
           <header class="topic-group-head">
             <h2 id="topic-google-business-profile">Google Business Profile</h2>
@@ -785,7 +822,7 @@
             <a class="post-card" href="/blog/google-business-profile-free-tool/">
               <picture>
                 <source type="image/webp" srcset="/assets/blog/post-google-business-profile.webp?v=2">
-                <img src="/assets/blog/post-google-business-profile.jpg?v=2" alt="Desanya Studio blog header: Google Business Profile, the free tool most businesses ignore, with a map pin illustration" width="1600" height="900" decoding="async">
+                <img src="/assets/blog/post-google-business-profile.jpg?v=2" alt="Desanya Studio blog header: Google Business Profile, the free tool most businesses ignore, with a map pin illustration" width="1600" height="900" loading="lazy" decoding="async">
               </picture>
               <span class="post-card-body">
                 <time class="post-card-date" datetime="2026-10-05">October 5, 2026</time>
@@ -806,7 +843,7 @@
             <a class="post-card" href="/blog/seo-basics-east-tennessee/">
               <picture>
                 <source type="image/webp" srcset="/assets/blog/post-seo-basics-east-tennessee.webp?v=2">
-                <img src="/assets/blog/post-seo-basics-east-tennessee.jpg?v=2" alt="Desanya Studio blog header: SEO basics for East Tennessee businesses, with a magnifying glass illustration" width="1600" height="900" decoding="async">
+                <img src="/assets/blog/post-seo-basics-east-tennessee.jpg?v=2" alt="Desanya Studio blog header: SEO basics for East Tennessee businesses, with a magnifying glass illustration" width="1600" height="900" loading="lazy" decoding="async">
               </picture>
               <span class="post-card-body">
                 <time class="post-card-date" datetime="2026-10-05">October 5, 2026</time>
@@ -827,7 +864,7 @@
             <a class="post-card" href="/blog/why-your-small-business-needs-a-real-website/">
               <picture>
                 <source type="image/webp" srcset="/assets/blog/post-why-real-website.webp?v=2">
-                <img src="/assets/blog/post-why-real-website.jpg?v=2" alt="Desanya Studio blog header: Why your small business needs a real website, with a browser window illustration" width="1600" height="900" decoding="async">
+                <img src="/assets/blog/post-why-real-website.jpg?v=2" alt="Desanya Studio blog header: Why your small business needs a real website, with a browser window illustration" width="1600" height="900" loading="lazy" decoding="async">
               </picture>
               <span class="post-card-body">
                 <time class="post-card-date" datetime="2026-10-05">October 5, 2026</time>
@@ -864,24 +901,30 @@
       {
         "@type": "ListItem",
         "position": 1,
+        "name": "Meet our spooky AI crew",
+        "url": "https://desanya.tech/blog/meet-our-spooky-ai-crew/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
         "name": "Google Business Profile: the free tool most businesses ignore",
         "url": "https://desanya.tech/blog/google-business-profile-free-tool/"
       },
       {
         "@type": "ListItem",
-        "position": 2,
+        "position": 3,
         "name": "SEO basics for East Tennessee businesses",
         "url": "https://desanya.tech/blog/seo-basics-east-tennessee/"
       },
       {
         "@type": "ListItem",
-        "position": 3,
+        "position": 4,
         "name": "Why your small business needs a real website",
         "url": "https://desanya.tech/blog/why-your-small-business-needs-a-real-website/"
       },
       {
         "@type": "ListItem",
-        "position": 4,
+        "position": 5,
         "name": "Writing website copy that converts",
         "url": "https://desanya.tech/blog/writing-website-copy-that-converts/"
       }

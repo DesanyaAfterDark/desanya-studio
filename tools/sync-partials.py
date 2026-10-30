@@ -26,6 +26,7 @@ PAGES = {
     "blog/google-business-profile-free-tool/index.html": ("blog", True),
     "blog/seo-basics-east-tennessee/index.html": ("blog", True),
     "blog/writing-website-copy-that-converts/index.html": ("blog", True),
+    "blog/meet-our-spooky-ai-crew/index.html": ("blog", True),
     "404.html": ("", True),
     "thanks/index.html": ("", True),
     "checkout.html": ("", False),

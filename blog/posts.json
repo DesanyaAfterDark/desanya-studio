@@ -33,6 +33,17 @@
   ],
   "posts": [
     {
+      "title": "Meet our spooky AI crew",
+      "slug": "meet-our-spooky-ai-crew",
+      "topic": "ai",
+      "date": "2026-10-30",
+      "featured": true,
+      "excerpt": "Desanya Studio’s 10 AI helpers dressed up for Halloween 2026. Meet each one, see its costume, and learn the real job it does behind the scenes.",
+      "image": "/assets/blog/post-spooky-ai-crew.jpg?v=1",
+      "imageWebp": "/assets/blog/post-spooky-ai-crew.webp?v=1",
+      "imageAlt": "Ten spooky-cute Halloween avatars for Desanya Studio’s AI helpers on a navy background, in neon pink, plum and lavender"
+    },
+    {
       "title": "Google Business Profile: the free tool most businesses ignore",
       "slug": "google-business-profile-free-tool",
       "topic": "google-business-profile",
