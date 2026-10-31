@@ -259,3 +259,117 @@ main img { max-width: 100%; }
     overflow: visible;
   }
 }
+
+/* ---------- Oct 31 polish: shop, gallery, type ---------- */
+
+/* Package titles scan like a menu. The balanced-pick badge sits in a
+   reserved row so Basic, Standard, and Premium line up across a card. */
+.price-card h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2vw, 1.65rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.price-card-desc { max-width: 68ch; }
+.price-card .tier-grid:has(.tier-badge) > .tier { padding-top: 2.35rem; }
+.tier-badge {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.85rem;
+  margin: 0;
+}
+.tier .btn { min-height: 44px; }
+.service-shop-note {
+  flex: 1 1 100%;
+  margin: 0.15rem 0 0;
+  max-width: 68ch;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.group-header:has(.service-shop-note) {
+  display: block;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.jump-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+#packages, #add-ons, #custom, #price-list, #faq, .gallery-group {
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+
+/* Gallery: chips, quieter policy lines, captions that don't cover the art */
+.gallery-specs { gap: 0.45rem; }
+.gallery-specs li {
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: rgba(13, 10, 29, 0.45);
+  letter-spacing: 0.04em;
+}
+.gallery-group-head h2 + p + p:not(.gallery-post-link) {
+  font-size: 0.92rem;
+  color: var(--text-dim);
+}
+.cover-card span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gallery-group-head { margin-bottom: 0.35rem; }
+
+/* Blog art is a header, not a second page. The real title sits just below. */
+.blog-banner,
+.post-hero-img {
+  width: 100%;
+  max-height: min(46vh, 420px);
+  object-fit: cover;
+  object-position: center 42%;
+}
+.blog-banner + .page-hero {
+  padding-top: clamp(0.75rem, 2vw, 1.35rem);
+}
+
+/* Small uppercase labels were dipping under 12px */
+.step-optional,
+.footer-heading,
+.gallery-tag,
+.price-pair-label,
+.group-kicker {
+  font-size: 0.75rem;
+}
+
+.contact-direct {
+  margin: 1rem 0 0.2rem;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.contact-direct a { text-decoration: none; }
+.contact-direct a:hover { text-decoration: underline; }
+.contact-hours {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.98rem;
+}
+
+/* Wide screens: show every gallery group. A hidden scrollbar was clipping the last chips. */
+@media (min-width: 960px) {
+  .gallery-filters:not(.service-filters) {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+
+/* Keep the corner chat from covering the last prices or the Discord line. */
+@media (min-width: 900px) and (max-width: 1500px) {
+  .step:nth-child(6) { padding-right: 8.25rem; }
+  .esports-own { padding-right: 11rem; }
+}

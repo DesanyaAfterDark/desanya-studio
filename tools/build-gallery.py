@@ -299,7 +299,7 @@ def best_html(data, by_id, lazy_state):
     return "\n".join([
         '    <section class="gallery-cover" aria-labelledby="gallery-best-heading">',
         '      <h2 id="gallery-best-heading">Best of</h2>',
-        "      <p>Eight pieces in a row. Swipe, or use the arrow keys. The center piece opens full size.</p>",
+        "      <p>Eight favorites. Swipe, or use the arrow keys. The piece in the center opens full size.</p>",
         '      <div class="cover-clip">',
         '      <div class="cover-stage" data-cover tabindex="0" aria-roledescription="carousel" aria-label="Best pieces">',
         *cards,
@@ -491,9 +491,10 @@ def load():
 def render(data, groups, by_id):
     buttons = ['      <button type="button" data-filter="all" aria-pressed="true">All</button>']
     for group in groups:
+        label = group.get("chip") or group["name"]
         buttons.append(
             f'      <button type="button" data-filter="{esc(group["id"])}" '
-            f'aria-pressed="false">{esc(group["name"])}</button>'
+            f'aria-pressed="false">{esc(label)}</button>'
         )
     lazy_state = {"used": False}
     blocks = []
