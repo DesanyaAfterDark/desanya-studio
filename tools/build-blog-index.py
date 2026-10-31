@@ -43,13 +43,26 @@ def pretty_date(iso):
     return datetime.strptime(iso, "%Y-%m-%d").strftime("%B %-d, %Y")
 
 
+def webp_source(post, sizes):
+    webp = post["imageWebp"]
+    path, _, query = webp.partition("?")
+    srcset = webp
+    if path.endswith(".webp"):
+        small = path[:-5] + "-720.webp"
+        if (ROOT / small.lstrip("/")).is_file():
+            small_url = small + (("?" + query) if query else "")
+            srcset = f"{small_url} 720w, {webp} 1600w"
+    size_attr = f' sizes="{sizes}"' if " " in srcset else ""
+    return f'<source type="image/webp" srcset="{esc(srcset)}"{size_attr}>'
+
+
 def card(post, lazy):
     loading = ' loading="lazy"' if lazy else ""
     return (
         "          <li>\n"
         f'            <a class="post-card" href="/blog/{esc(post["slug"])}/">\n'
         "              <picture>\n"
-        f'                <source type="image/webp" srcset="{esc(post["imageWebp"])}">\n'
+        f'                {webp_source(post, "(max-width: 700px) 92vw, 480px")}\n'
         f'                <img src="{esc(post["image"])}" alt="{esc(post["imageAlt"])}" width="1600" height="900"{loading} decoding="async">\n'
         "              </picture>\n"
         '              <span class="post-card-body">\n'
@@ -68,8 +81,8 @@ def hero(post):
         '          <h2 id="featured-heading" class="featured-story-label">Featured story</h2>\n'
         f'          <a class="post-card post-card--hero" href="/blog/{esc(post["slug"])}/">\n'
         "            <picture>\n"
-        f'              <source type="image/webp" srcset="{esc(post["imageWebp"])}">\n'
-        f'              <img src="{esc(post["image"])}" alt="{esc(post["imageAlt"])}" width="1600" height="900" fetchpriority="high" decoding="async">\n'
+        f'              {webp_source(post, "(max-width: 960px) 100vw, 640px")}\n'
+        f'              <img src="{esc(post["image"])}" alt="{esc(post["imageAlt"])}" width="1600" height="900" decoding="async">\n'
         "            </picture>\n"
         '            <span class="post-card-body">\n'
         f'              <time class="post-card-date" datetime="{esc(post["date"])}">{esc(pretty_date(post["date"]))}</time>\n'
