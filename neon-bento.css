@@ -193,6 +193,8 @@ body { background: radial-gradient(1100px 620px at 85% -8%, rgba(217,107,192,.16
 /* Gallery: featured hero set at the top (set "featured": true on a group) */
 .gallery-group--featured { position: relative; padding: clamp(1rem, 3vw, 2rem); margin-bottom: 2.5rem; border: 1px solid rgba(255, 95, 184, 0.35); border-radius: 24px; background: radial-gradient(120% 80% at 0% 0%, rgba(255, 95, 184, 0.14), transparent 60%), rgba(255, 255, 255, 0.02); }
 .gallery-eyebrow { margin: 0 0 0.35rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #ff8fd0; }
+.gallery-group-head .gallery-post-link { margin: 0.15rem 0 0.85rem; }
+.gallery-group-head .gallery-post-link a { font-weight: 600; color: #ff8fd0; text-underline-offset: 0.18em; }
 
 /* Site-wide visual pass (Oct 29, pass 2) */
 main h1, main h2, main h3 { text-wrap: balance; }

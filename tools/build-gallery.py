@@ -344,6 +344,14 @@ def group_html(group, items, lazy_state):
         parts.append(f'        <p>{esc(group["lede"])}</p>')
     if group.get("note"):
         parts.append(f'        <p>{esc(group["note"])}</p>')
+    post_href = group.get("postHref") or ""
+    post_label = group.get("postLabel") or ""
+    if post_href or post_label:
+        if not post_href or not post_label:
+            raise SystemExit(f"{group['id']} needs both postHref and postLabel")
+        parts.append(
+            f'        <p class="gallery-post-link"><a href="{esc(post_href)}">{esc(post_label)}</a></p>'
+        )
     if group.get("specs"):
         parts.append('        <ul class="gallery-specs" aria-label="Project details">')
         for spec in group["specs"]:
@@ -453,6 +461,22 @@ def load():
                 raise SystemExit(f"outbound link must be https: {title}")
             if not link.get("label"):
                 raise SystemExit(f"outbound link needs a label: {title}")
+    for group in groups:
+        post_href = group.get("postHref") or ""
+        post_label = group.get("postLabel") or ""
+        if bool(post_href) != bool(post_label):
+            raise SystemExit(f"{group['id']} needs both postHref and postLabel")
+        if not post_href:
+            continue
+        if post_href.startswith("https://"):
+            continue
+        if not post_href.startswith("/"):
+            raise SystemExit(f"postHref must start with / or https://: {group['id']}")
+        target = ROOT / post_href.lstrip("/")
+        if post_href.endswith("/"):
+            target = target / "index.html"
+        if not target.is_file():
+            raise SystemExit(f"missing page for {group['id']} postHref: {post_href}")
     for title in data.get("bestOf") or []:
         match = next((item for item in items if item["title"] == title), None)
         if match is None:
