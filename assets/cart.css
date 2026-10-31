@@ -20,6 +20,11 @@
   border-color: var(--accent);
   background: var(--accent-soft);
 }
+.ds-cart-btn:focus-visible,
+.ds-cart-close:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
 .ds-cart-btn svg {
   width: 1.25rem;
   height: 1.25rem;
@@ -69,10 +74,13 @@
   display: flex;
   flex-direction: column;
   transform: translateX(105%);
-  transition: transform 0.28s ease;
+  visibility: hidden;
+  transition: transform 0.28s ease, visibility 0s linear 0.28s;
 }
 #ds-cart-root.open .ds-cart-drawer {
   transform: translateX(0);
+  visibility: visible;
+  transition: transform 0.28s ease, visibility 0s linear 0s;
 }
 body.ds-cart-lock { overflow: hidden; }
 

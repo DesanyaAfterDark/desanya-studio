@@ -106,7 +106,7 @@ var DESANYA_LINKS = {
 
     var scrollY = 0;
     var scrollCaptured = false;
-    var mobileQuery = window.matchMedia('(max-width: 820px)');
+    var mobileQuery = window.matchMedia('(max-width: 1159px)');
 
     function currentScroll() {
       return window.scrollY || window.pageYOffset || 0;
