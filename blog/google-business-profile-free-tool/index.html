@@ -44,7 +44,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="/assets/site.min.css?v=34">
+  <link rel="stylesheet" href="/assets/site.min.css?v=35">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -90,12 +90,6 @@
       "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       "opens": "08:00",
       "closes": "17:00"
-    },
-    {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": ["Saturday", "Sunday"],
-      "opens": "00:00",
-      "closes": "00:00"
     }
   ],
   "priceRange": "$60–$2,500",
@@ -766,8 +760,8 @@
   <main id="main">
     <article>
       <picture>
-        <source srcset="/assets/blog/post-google-business-profile.webp?v=2" type="image/webp">
-        <img class="post-hero-img" src="/assets/blog/post-google-business-profile.jpg?v=2" alt="Desanya Studio blog header: Google Business Profile, the free tool most businesses ignore, with a map pin illustration" width="1600" height="900">
+        <source type="image/webp" srcset="/assets/blog/post-google-business-profile-720.webp?v=2 720w, /assets/blog/post-google-business-profile.webp?v=2 1600w" sizes="100vw">
+        <img class="post-hero-img" src="/assets/blog/post-google-business-profile.jpg?v=2" alt="Desanya Studio blog header: Google Business Profile, the free tool most businesses ignore, with a map pin illustration" width="1600" height="900" fetchpriority="high" decoding="async">
       </picture>
       <header class="post-intro container">
         <nav class="crumbs" aria-label="Breadcrumb">
@@ -777,7 +771,7 @@
             <li aria-current="page">Google Business Profile: the free tool most businesses ignore</li>
           </ol>
         </nav>
-                        <!-- @blog-topic -->
+                                <!-- @blog-topic -->
         <p class="post-topic"><a href="/blog/#google-business-profile">Google Business Profile</a> · <a href="/local-seo-google-business-profile.html">Local SEO &amp; Google Business Profile</a></p>
         <!-- /@blog-topic -->
 <h1>Google Business Profile: the free tool most businesses ignore</h1>
