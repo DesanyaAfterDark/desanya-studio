@@ -44,7 +44,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/site.min.css?v=35">
+  <link rel="stylesheet" href="assets/site.min.css?v=36">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -688,7 +688,6 @@
     "publisher": {"@id": "https://desanya.tech/#business"}
   }
   </script>
-  <link rel="preload" as="image" type="image/webp" href="assets/shermans-proof-720.webp" imagesrcset="assets/shermans-proof-720.webp 720w, assets/shermans-proof.webp 960w" imagesizes="(max-width: 820px) 300px, 360px" fetchpriority="high">
   <script>
     /* Old one-page anchors (/#services etc.) → new pages */
     (function () {
@@ -1035,9 +1034,14 @@
           <behold-widget feed-id="utAvfHBZwPiE6pRpRNXr"></behold-widget>
           <script>
             (() => {
-              if(window.__bhldScript)return;window.__bhldScript=true;
-              const d=document,s=d.createElement("script");s.type="module";
-              s.src="https://w.behold.so/widget.js";setTimeout(()=>{d.head.append(s);},0);
+              const section = document.getElementById('instagram');
+              if (!section || section.hidden) return;
+              if (window.__bhldScript) return;
+              window.__bhldScript = true;
+              const d = document, s = d.createElement('script');
+              s.type = 'module';
+              s.src = 'https://w.behold.so/widget.js';
+              setTimeout(() => { d.head.append(s); }, 0);
             })();
           </script>
         </div>

@@ -2392,6 +2392,7 @@ a:hover {
 
 .post-body a {
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .post-body ul,
