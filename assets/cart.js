@@ -407,6 +407,20 @@
     return getItems().some(function (it) { return it.recurring; });
   }
 
+  /* Display only. createOrder still computes the PayPal amount itself. */
+  function monthlyLaterTotal() {
+    var sum = 0;
+    getItems().forEach(function (it) {
+      if (it.recurring) sum += it.price * it.qty;
+    });
+    return Math.round(sum * 100) / 100;
+  }
+
+  function amountDueToday() {
+    if (!getPayableItems().length) return getItems().length ? 1 : 0;
+    return getPayableTotal();
+  }
+
   /* ------------------------------------------------------------------ */
   /* Drawer UI                                                           */
   /* ------------------------------------------------------------------ */
@@ -427,7 +441,10 @@
         '<div class="ds-cart-items" data-cart-items></div>' +
         '<div class="ds-cart-foot" data-cart-foot>' +
           '<div class="ds-cart-discount" data-cart-discount hidden></div>' +
-          '<div class="ds-cart-total"><span>Subtotal</span><strong data-cart-total>$0</strong></div>' +
+          '<div class="ds-cart-discount" data-cart-list hidden><span>Cart total</span><strong data-cart-list-total>$0</strong></div>' +
+          '<div class="ds-cart-discount" data-cart-later hidden><span>Monthly, billed later</span><strong data-cart-later-total>$0</strong></div>' +
+          '<div class="ds-cart-total"><span>Due today</span><strong data-cart-total>$0</strong></div>' +
+          '<p class="ds-cart-note" data-cart-placeholder hidden>This $1 is a placeholder. The monthly price is invoiced later.</p>' +
           '<p class="ds-cart-note" data-cart-recurring-note hidden>Monthly services are not charged today. Desanya Studio sends a manual PayPal invoice before each month. An unpaid invoice does not renew the service. <a href="/payment-terms.html">Payment &amp; refund terms</a>.</p>' +
           '<a class="btn btn-primary ds-cart-checkout" href="/checkout.html">Checkout</a>' +
           '<button type="button" class="btn btn-ghost ds-cart-continue" data-cart-close>Continue browsing</button>' +
@@ -441,7 +458,12 @@
     els.items = root.querySelector('[data-cart-items]');
     els.foot = root.querySelector('[data-cart-foot]');
     els.total = root.querySelector('[data-cart-total]');
+    els.list = root.querySelector('[data-cart-list]');
+    els.listTotal = root.querySelector('[data-cart-list-total]');
+    els.later = root.querySelector('[data-cart-later]');
+    els.laterTotal = root.querySelector('[data-cart-later-total]');
     els.discount = root.querySelector('[data-cart-discount]');
+    els.placeholder = root.querySelector('[data-cart-placeholder]');
     els.recurringNote = root.querySelector('[data-cart-recurring-note]');
 
     root.addEventListener('click', function (e) {
@@ -507,7 +529,20 @@
           '<button type="button" class="ds-cart-item-remove" data-cart-remove="' + esc(it.slug) + '" aria-label="Remove ' + esc(it.name) + '">&times;</button>' +
         '</div>';
       }).join('');
-      els.total.textContent = money(getTotal());
+      var due = amountDueToday();
+      var later = monthlyLaterTotal();
+      var list = getTotal();
+      els.total.textContent = money(due);
+      if (els.later) {
+        els.later.hidden = !(later > 0);
+        if (later > 0) els.laterTotal.textContent = money(later);
+      }
+      if (els.list) {
+        var showList = Math.round(list * 100) !== Math.round(due * 100) && Math.round(list * 100) !== Math.round(later * 100);
+        els.list.hidden = !showList;
+        if (showList) els.listTotal.textContent = money(list);
+      }
+      if (els.placeholder) els.placeholder.hidden = !(items.length && !getPayableItems().length);
       els.recurringNote.hidden = !hasRecurring();
       var off = discountAmount();
       if (els.discount) {
@@ -605,6 +640,8 @@
     getPayableItems: getPayableItems,
     getPayableTotal: getPayableTotal,
     getTotal: getTotal,
+    amountDueToday: amountDueToday,
+    monthlyLaterTotal: monthlyLaterTotal,
     getCount: getCount,
     hasRecurring: hasRecurring,
     open: open,

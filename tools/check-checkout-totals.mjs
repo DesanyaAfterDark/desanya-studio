@@ -210,6 +210,181 @@ async function readCase(port, query) {
   return JSON.parse(match[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
 }
 
+function moneyText(n) {
+  const v = Math.round(Number(n) * 100) / 100;
+  const cents = Math.round(v * 100) % 100 !== 0;
+  return '$' + v.toLocaleString('en-US', {
+    minimumFractionDigits: cents ? 2 : 0,
+    maximumFractionDigits: 2
+  });
+}
+
+const visibleClosed = {
+  'one-time': { cart: { 'descriptions-basic': 2 }, due: '$120', later: null, list: null, placeholder: false, apiTotal: 120, capture: '120.00' },
+  mixed: { cart: { 'website-basic': 1, 'monthly-care': 1 }, due: '$900', later: '$99', list: '$999', placeholder: false, apiTotal: 999, capture: '900.00' },
+  'monthly-only': { cart: { 'monthly-care': 1 }, due: '$1', later: '$99', list: null, placeholder: true, apiTotal: 99, capture: '1.00' },
+  rush: { cart: { 'website-standard': 1, rush: 1 }, due: '$2,160', later: null, list: null, placeholder: false, apiTotal: 2160, capture: '2160.00' },
+  'discount-closed': { cart: { 'website-basic': 1, rush: 1, 'monthly-care': 1 }, due: '$1,215', later: '$99', list: '$1,314', placeholder: false, apiTotal: 1314, capture: '1215.00' }
+};
+
+const visibleOpen = {
+  'discount-open': { cart: { 'website-standard': 1, 'extra-page': 1, 'seo-managing': 1 }, due: '$1,640', later: '$450', list: '$2,090', placeholder: false, apiTotal: 2090, capture: '1640.00' },
+  'discount-rush-monthly': { cart: { 'website-basic': 1, rush: 1, 'monthly-care': 1 }, due: '$1,125', later: '$99', list: '$1,224', placeholder: false, apiTotal: 1224, capture: '1125.00' },
+  'discount-ineligible': { cart: { 'descriptions-basic': 1, 'monthly-care': 1 }, due: '$60', later: '$99', list: '$159', placeholder: false, apiTotal: 159, capture: '60.00' }
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function checkVisible(port, failures) {
+  const debugPort = 9344 + (process.pid % 1000);
+  const chrome = spawn('/usr/bin/google-chrome-stable', [
+    '--headless=new',
+    '--disable-gpu',
+    '--no-sandbox',
+    '--disable-dev-shm-usage',
+    `--remote-debugging-port=${debugPort}`,
+    `--user-data-dir=/tmp/desanya-due-today-${process.pid}`,
+    'about:blank'
+  ], { stdio: 'ignore' });
+  let ws;
+  try {
+    for (let i = 0; i < 40; i++) {
+      try {
+        const res = await fetch(`http://127.0.0.1:${debugPort}/json/version`);
+        const data = await res.json();
+        ws = new WebSocket(data.webSocketDebuggerUrl);
+        await new Promise((resolve, reject) => {
+          ws.addEventListener('open', resolve);
+          ws.addEventListener('error', reject);
+        });
+        break;
+      } catch (err) {
+        await sleep(200);
+      }
+    }
+    if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('checkout display chrome did not open');
+    let msgId = 0;
+    const pending = new Map();
+    ws.addEventListener('message', (ev) => {
+      const msg = JSON.parse(ev.data);
+      if (msg.id && pending.has(msg.id)) {
+        const item = pending.get(msg.id);
+        clearTimeout(item.timer);
+        pending.delete(msg.id);
+        if (msg.error) item.reject(new Error(JSON.stringify(msg.error)));
+        else item.resolve(msg.result);
+      }
+    });
+    function cdp(method, params = {}, sessionId) {
+      const id = ++msgId;
+      const payload = { id, method, params };
+      if (sessionId) payload.sessionId = sessionId;
+      ws.send(JSON.stringify(payload));
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          pending.delete(id);
+          reject(new Error('timeout ' + method));
+        }, 20000);
+        pending.set(id, { resolve, reject, timer });
+      });
+    }
+    const { targetId } = await cdp('Target.createTarget', { url: 'about:blank' });
+    const { sessionId } = await cdp('Target.attachToTarget', { targetId, flatten: true });
+    await cdp('Page.enable', {}, sessionId);
+    await cdp('Network.enable', {}, sessionId);
+    await cdp('Network.setBlockedURLs', { urls: ['*://www.paypal.com/*', '*://www.paypalobjects.com/*'] }, sessionId);
+
+    async function runSet(label, cases) {
+      for (const [name, spec] of Object.entries(cases)) {
+        await cdp('Page.navigate', { url: `http://127.0.0.1:${port}/checkout.html` }, sessionId);
+        await sleep(400);
+        const result = await cdp('Runtime.evaluate', {
+          expression: `localStorage.setItem('desanya_cart_v1', ${JSON.stringify(JSON.stringify(spec.cart))}); location.reload(); 'reloading'`,
+          returnByValue: true
+        }, sessionId);
+        if (!result) throw new Error('reload failed ' + name);
+        const view = await cdp('Runtime.evaluate', {
+          expression: `new Promise((resolve) => {
+            const start = Date.now();
+            const tick = () => {
+              const due = document.getElementById('checkout-total');
+              const main = document.getElementById('checkout-main');
+              const ready = due && main && !main.hidden && window.DesanyaCart && window.DesanyaCart.getCount() > 0;
+              if (ready || Date.now() - start > 8000) {
+                const later = document.getElementById('checkout-later');
+                const list = document.getElementById('checkout-list');
+                const note = document.getElementById('checkout-placeholder-note');
+                const drawerDue = document.querySelector('[data-cart-total]');
+                resolve({
+                  due: due ? due.textContent : '',
+                  laterHidden: later ? later.hidden : true,
+                  later: document.getElementById('checkout-later-total') ? document.getElementById('checkout-later-total').textContent : '',
+                  listHidden: list ? list.hidden : true,
+                  list: document.getElementById('checkout-list-total') ? document.getElementById('checkout-list-total').textContent : '',
+                  placeholderHidden: note ? note.hidden : true,
+                  apiTotal: window.DesanyaCart ? window.DesanyaCart.getTotal() : null,
+                  apiDue: window.DesanyaCart && window.DesanyaCart.amountDueToday ? window.DesanyaCart.amountDueToday() : null,
+                  drawerDue: drawerDue ? drawerDue.textContent : ''
+                });
+              } else setTimeout(tick, 50);
+            };
+            tick();
+          })`,
+          awaitPromise: true,
+          returnByValue: true
+        }, sessionId);
+        const got = view.result.value;
+        const shown = {
+          due: got.due,
+          later: got.laterHidden ? null : got.later,
+          list: got.listHidden ? null : got.list,
+          placeholder: !got.placeholderHidden,
+          apiTotal: got.apiTotal,
+          capture: Number(got.apiDue).toFixed(2),
+          drawerDue: got.drawerDue
+        };
+        const want = {
+          due: spec.due,
+          later: spec.later,
+          list: spec.list,
+          placeholder: spec.placeholder,
+          apiTotal: spec.apiTotal,
+          capture: spec.capture,
+          drawerDue: spec.due
+        };
+        expectEqual(label + ' visible ' + name, shown, want, failures);
+        if (shown.due !== moneyText(Number(spec.capture))) {
+          failures.push(label + ' ' + name + ' due text ' + shown.due + ' != capture ' + spec.capture);
+        }
+      }
+    }
+
+    await runSet('closed', visibleClosed);
+    await cdp('Page.addScriptToEvaluateOnNewDocument', {
+      source: `(() => {
+        var fixed = new Date('2026-11-28T17:00:00Z');
+        var NativeDate = Date;
+        function FakeDate() {
+          if (!(this instanceof FakeDate)) return String(fixed);
+          if (arguments.length === 0) return new NativeDate(fixed.getTime());
+          return new NativeDate(...arguments);
+        }
+        FakeDate.prototype = NativeDate.prototype;
+        FakeDate.now = function () { return fixed.getTime(); };
+        FakeDate.parse = NativeDate.parse;
+        FakeDate.UTC = NativeDate.UTC;
+        window.Date = FakeDate;
+        try { sessionStorage.setItem('desanya_adj_v1', '1'); } catch (e) {}
+      })();`
+    }, sessionId);
+    await runSet('open', visibleOpen);
+  } finally {
+    chrome.kill('SIGKILL');
+  }
+}
+
 const server = await serve();
 const port = server.address().port;
 const failures = [];
@@ -230,6 +405,7 @@ try {
       expectEqual(row.label, got, want, failures);
     }
   }
+  await checkVisible(port, failures);
 } finally {
   server.close();
 }

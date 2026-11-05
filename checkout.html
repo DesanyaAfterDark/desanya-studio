@@ -751,10 +751,21 @@
         <section class="checkout-card" aria-labelledby="order-summary-h">
           <h2 id="order-summary-h">Order summary</h2>
           <div id="checkout-lines"></div>
+          <div class="checkout-line" id="checkout-list" hidden>
+            <span class="checkout-line-name">Cart total <small>includes monthly prices invoiced later</small></span>
+            <span class="checkout-line-total" id="checkout-list-total">$0</span>
+          </div>
+          <div class="checkout-line" id="checkout-later" hidden>
+            <span class="checkout-line-name">Monthly, billed later <small>manual PayPal invoice</small></span>
+            <span class="checkout-line-total" id="checkout-later-total">$0</span>
+          </div>
           <div class="checkout-grand">
             <span>Total due today</span>
             <strong id="checkout-total">$0</strong>
           </div>
+          <p class="ds-cart-note" id="checkout-placeholder-note" hidden>
+            PayPal charges this $1 placeholder today. It is credited to the first monthly invoice, or refunded in full on the original PayPal payment if the service never starts.
+          </p>
           <p class="ds-cart-note" id="checkout-recurring-note" hidden>
             Monthly services are not charged today. Desanya Studio sends a manual PayPal invoice before each month. An unpaid invoice does not renew the service. <a href="payment-terms.html">Payment &amp; refund terms</a>.
           </p>
@@ -855,7 +866,7 @@
       <p class="footer-privacy">Privacy: forms are delivered by email through FormSubmit and nothing is stored on this site. We use Google Analytics to see how visitors use the site. No ads, and we never sell your info.</p>
       <p class="footer-copy">&copy; <span data-year>2026</span> Desanya Studio</p>
     </div>
-    <script src="assets/cart.js?v=7" defer></script>
+    <script src="assets/cart.js?v=8" defer></script>
   </footer>
   <!-- /@partial:footer -->
 
@@ -1120,7 +1131,19 @@
         linesEl.innerHTML = html;
         if (cart.syncDiscountField) cart.syncDiscountField();
 
-        document.getElementById('checkout-total').textContent = money(cart.getTotal());
+        var due = cart.amountDueToday ? cart.amountDueToday() : cart.getPayableTotal();
+        var later = cart.monthlyLaterTotal ? cart.monthlyLaterTotal() : 0;
+        var list = cart.getTotal();
+        document.getElementById('checkout-total').textContent = money(due);
+        var laterRow = document.getElementById('checkout-later');
+        laterRow.hidden = !(later > 0);
+        if (later > 0) document.getElementById('checkout-later-total').textContent = money(later);
+        var showList = Math.round(list * 100) !== Math.round(due * 100) && Math.round(list * 100) !== Math.round(later * 100);
+        var listRow = document.getElementById('checkout-list');
+        listRow.hidden = !showList;
+        if (showList) document.getElementById('checkout-list-total').textContent = money(list);
+        var payable = cart.getPayableItems ? cart.getPayableItems() : [];
+        document.getElementById('checkout-placeholder-note').hidden = payable.length !== 0;
         document.getElementById('checkout-recurring-note').hidden = !cart.hasRecurring();
 
         linesEl.onclick = function (e) {
