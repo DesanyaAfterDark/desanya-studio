@@ -1066,7 +1066,13 @@
       sandbox: 'sb',                       // PayPal sandbox placeholder — replace with sandbox client ID
       live: 'AS5MKJS88Z-6tfrb3gvFL2vkKhnjmJYiJTWIZxGWAHuOYVw5AN1_07x82XNkaoIE1MNF4WxcYF0BoG-9'
     };
+    /* Empty until a reviewed worker is deployed and this constant is changed
+       in a later release. Do not put a secret here. An empty value keeps the
+       current browser checkout. A non-empty value that fails does not fall
+       back to a browser-calculated price. */
+    var PAYPAL_ORDER_API = '';
   </script>
+  <script type="module" src="shared/order-client.js"></script>
   <script>
     (function () {
       var mode = (typeof PAYPAL_MODE !== 'undefined' && PAYPAL_MODE === 'live') ? 'live' : 'sandbox';
@@ -1219,6 +1225,50 @@
         return { name: name, email: email };
       }
 
+      function orderIdempotencyKey(cart) {
+        var raw = cart.getItems().map(function (item) { return item.slug + ':' + item.qty; }).sort().join('|');
+        var code = cart.getDiscountCode ? cart.getDiscountCode() : '';
+        var name = 'desanya_idem_' + raw + '|' + code;
+        try {
+          var existing = sessionStorage.getItem(name);
+          if (existing) return existing;
+          var created = crypto.randomUUID();
+          sessionStorage.setItem(name, created);
+          return created;
+        } catch (e) {
+          return crypto.randomUUID();
+        }
+      }
+
+      function configuredOrderApi() {
+        var raw = (typeof PAYPAL_ORDER_API === 'string') ? PAYPAL_ORDER_API.trim() : '';
+        if (!raw) return { mode: 'browser', url: '' };
+        if (!window.DesanyaOrderClient || typeof window.DesanyaOrderClient.selectCheckoutMode !== 'function') {
+          return { mode: 'invalid', url: '' };
+        }
+        return window.DesanyaOrderClient.selectCheckoutMode(raw);
+      }
+
+      function showOrderError(message) {
+        var err = document.getElementById('checkout-error');
+        err.textContent = message;
+        err.hidden = false;
+      }
+
+      function storeReceipt(capture) {
+        var name = document.getElementById('co-name').value.trim();
+        var email = document.getElementById('co-email').value.trim();
+        sessionStorage.setItem('desanya_last_order', JSON.stringify({
+          orderId: capture.orderId,
+          captureId: capture.captureId,
+          status: capture.status,
+          currency: capture.currency,
+          amount: capture.amount,
+          name: name,
+          email: email
+        }));
+      }
+
       function initPayPal() {
         renderSummary();
         if (!window.paypal || !window.paypal.Buttons) {
@@ -1250,6 +1300,26 @@
             return validCustomer() ? actions.resolve() : actions.reject();
           },
           createOrder: function (data, actions) {
+            var mode = configuredOrderApi();
+            if (mode.mode === 'invalid') {
+              showOrderError('Checkout is not configured. Your cart is still here.');
+              return Promise.reject(new Error('order_api_misconfigured'));
+            }
+            if (mode.mode === 'server') {
+              var cartForApi = window.DesanyaCart;
+              var lines = cartForApi.getItems().map(function (item) { return { slug: item.slug, qty: item.qty }; });
+              return window.DesanyaOrderClient.createServerOrder(mode.url, {
+                items: lines,
+                discountCode: cartForApi.getDiscountCode ? cartForApi.getDiscountCode() : '',
+                idempotencyKey: orderIdempotencyKey(cartForApi)
+              }).then(function (created) {
+                window.__desanyaExpectedAmount = created.amount;
+                return created.orderId;
+              }).catch(function () {
+                showOrderError('The order service did not start payment. Your cart is still here. This page will not send a browser-calculated price.');
+                return Promise.reject(new Error('order_api'));
+              });
+            }
             var cart = window.DesanyaCart;
             // Recurring items are arranged after checkout. Rush is 35% of one-time items.
             // A monthly-only cart has nothing to capture, so it falls through to the $1 deposit.
@@ -1297,6 +1367,38 @@
             return actions.order.create({ purchase_units: purchaseUnits });
           },
           onApprove: function (data, actions) {
+            var mode = configuredOrderApi();
+            if (mode.mode === 'invalid') {
+              showOrderError('Checkout is not configured. Your cart is still here.');
+              return;
+            }
+            if (mode.mode === 'server') {
+              var captureKey = orderIdempotencyKey({ getItems: function () { return [{ slug: 'capture', qty: 1 }]; }, getDiscountCode: function () { return data.orderID; } });
+              return window.DesanyaOrderClient.captureServerOrder(mode.url, data.orderID, {
+                idempotencyKey: captureKey,
+                expectedAmount: window.__desanyaExpectedAmount
+              }).then(function (capture) {
+                try {
+                  if (window.gtag) {
+                    window.gtag('event', 'purchase', {
+                      transaction_id: capture.captureId,
+                      value: Number(capture.amount),
+                      currency: capture.currency
+                    });
+                  }
+                } catch (e) {}
+                try {
+                  storeReceipt(capture);
+                } catch (e) {
+                  showOrderError('Payment may have completed, but this browser could not store the note. Check PayPal before ordering again. Your cart is still here.');
+                  return;
+                }
+                window.DesanyaCart.clear();
+                window.location.href = 'thanks/#receipt';
+              }).catch(function () {
+                showOrderError('The order service did not confirm a completed USD payment. Your cart is still here. This page will not report a browser-priced success.');
+              });
+            }
             return actions.order.capture().then(function (details) {
               var cart = window.DesanyaCart;
               var capture = readCapture(details);
@@ -1315,18 +1417,8 @@
                   });
                 }
               } catch (e) {}
-              var name = document.getElementById('co-name').value.trim();
-              var email = document.getElementById('co-email').value.trim();
               try {
-                sessionStorage.setItem('desanya_last_order', JSON.stringify({
-                  orderId: capture.orderId,
-                  captureId: capture.captureId,
-                  status: capture.status,
-                  currency: capture.currency,
-                  amount: capture.amount,
-                  name: name,
-                  email: email
-                }));
+                storeReceipt(capture);
               } catch (e) {
                 err.textContent = 'Payment may have completed, but this browser could not store the receipt. Check PayPal before ordering again. Your cart is still here.';
                 err.hidden = false;
