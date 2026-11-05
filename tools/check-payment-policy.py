@@ -196,6 +196,16 @@ if "https://desanya.tech/privacy.html" not in sitemap:
 else:
     ok("sitemap lists privacy.html")
 
+game_policy = (ROOT / "firefly-hollow" / "privacy" / "index.html").read_text()
+if "[date of v1.0 release]" in game_policy or "<mark>" in game_policy:
+    fail("Firefly policy still has a raw date placeholder")
+elif "Release date:</strong> To be determined." not in game_policy:
+    fail("Firefly policy does not say the release date is to be determined")
+elif re.search(r"Effective:\s*</strong>\s*[^<]*\d{4}", game_policy):
+    fail("Firefly policy invents an effective date")
+else:
+    ok("Firefly release date is to be determined, with no invented effective date")
+
 privacy_path = ROOT / "privacy.html"
 if not privacy_path.exists():
     fail("privacy.html is missing")
@@ -210,6 +220,10 @@ else:
         fail("privacy page missing Niota, TN")
     else:
         ok("privacy page city only")
+    if "release date is still to be determined" not in plow:
+        fail("website privacy page does not say the game release date is to be determined")
+    else:
+        ok("website privacy page says the game release date is to be determined")
     if "firefly-hollow/privacy/" not in privacy_main:
         fail("privacy page does not point at the separate game policy")
     else:
