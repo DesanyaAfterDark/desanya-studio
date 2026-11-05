@@ -44,7 +44,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/site.min.css?v=36">
+  <link rel="stylesheet" href="assets/site.min.css?v=37">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -704,6 +704,11 @@
       },
       {
         "@type": "Question",
+        "name": "How do payments and cancellations work?",
+        "acceptedAnswer": {"@type": "Answer", "text": "One-time cart packages are paid in full with PayPal at checkout. Quoted work is invoiced before the start: Net 7 unless the invoice says otherwise, paid in full when the quote is $500 or less, or 50% before the start and 50% before handoff or go-live when it is over $500. Monthly services use a manual PayPal invoice before each period, with no automatic debit. Cancel a future monthly period by emailing desanyaafterdark@gmail.com before the next service period begins. Full terms are on the Payment & refund terms page."}
+      },
+      {
+        "@type": "Question",
         "name": "Will anything publish without my approval?",
         "acceptedAnswer": {"@type": "Answer", "text": "Never. Every site change, post, and listing update is drafted for your sign-off first."}
       },
@@ -817,7 +822,7 @@
             <span class="step-num" aria-hidden="true">02</span>
             <div>
               <h3>Package or quote</h3>
-              <p>A published package price — or a custom quote for bigger scopes — in writing, before any work starts.</p>
+              <p>A published package price — or a custom quote for bigger scopes — in writing, before any work starts. Cart packages are paid in full at PayPal checkout. Quoted work is invoiced before the start. See <a href="payment-terms.html">Payment &amp; refund terms</a>.</p>
             </div>
           </li>
           <li class="step">
@@ -845,7 +850,7 @@
             <span class="step-num" aria-hidden="true">06</span>
             <div>
               <h3>Ongoing care <span class="step-optional">optional</span></h3>
-              <p>Monthly care is $99/mo. SEO &amp; Google managing is $450/mo. Social setup is $550, and social managing is $350, $600, or $850/mo. Blog posts are $700/mo.</p>
+              <p>Monthly care is $99/mo. SEO &amp; Google managing is $450/mo. Social setup is $550, and social managing is $350, $600, or $850/mo. Blog posts are $700/mo. Monthly services are billed by a manual PayPal invoice before each period. There is no automatic debit.</p>
             </div>
           </li>
         </ol>
@@ -881,6 +886,10 @@
           <details>
             <summary>What if my project doesn’t fit a package?</summary>
             <p>Larger builds, branding, and illustration are quoted per project. Use the <a href="contact.html?service=not-sure#order">order form</a> and choose “Not sure yet.”</p>
+          </details>
+          <details id="payments-faq">
+            <summary>How do payments and cancellations work?</summary>
+            <p>One-time cart packages are paid in full with PayPal at checkout. Quoted work is invoiced before the start: Net 7 unless the invoice says otherwise, paid in full when the quote is $500 or less, or 50% before the start and 50% before handoff or go-live when it is over $500. Monthly services use a manual PayPal invoice before each period, with no automatic debit. Cancel a future monthly period by emailing <a href="mailto:desanyaafterdark@gmail.com">desanyaafterdark@gmail.com</a> before the next service period begins. Full terms are on the <a href="payment-terms.html">Payment &amp; refund terms</a> page.</p>
           </details>
           <details>
             <summary>Will anything publish without my approval?</summary>
@@ -957,6 +966,7 @@
           <li><a href="contact.html" data-nav="contact">Contact</a></li>
           <li><a href="esports-gaming/" data-nav="esports">Esports &amp; Gaming</a></li>
           <li><a href="gallery.html" data-nav="gallery">Gallery</a></li>
+          <li><a href="payment-terms.html" data-nav="payment">Payment &amp; refund terms</a></li>
           <li><a href="process.html" data-nav="process" aria-current="page">Process</a></li>
           <li><a href="services.html" data-nav="services">Services</a></li>
           <li><a href="work.html" data-nav="work">Work</a></li>
@@ -992,7 +1002,7 @@
       <p class="footer-privacy">Privacy: forms are delivered by email through FormSubmit and nothing is stored on this site. We use Google Analytics to see how visitors use the site. No ads, and we never sell your info.</p>
       <p class="footer-copy">&copy; <span data-year>2026</span> Desanya Studio</p>
     </div>
-    <script src="assets/cart.js?v=6" defer></script>
+    <script src="assets/cart.js?v=7" defer></script>
   </footer>
   <!-- /@partial:footer -->
 

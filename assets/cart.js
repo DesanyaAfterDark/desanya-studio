@@ -428,7 +428,7 @@
         '<div class="ds-cart-foot" data-cart-foot>' +
           '<div class="ds-cart-discount" data-cart-discount hidden></div>' +
           '<div class="ds-cart-total"><span>Subtotal</span><strong data-cart-total>$0</strong></div>' +
-          '<p class="ds-cart-note" data-cart-recurring-note hidden>Monthly services are billed separately after checkout — you\u2019ll only pay one-time items today.</p>' +
+          '<p class="ds-cart-note" data-cart-recurring-note hidden>Monthly services are not charged today. Desanya Studio sends a manual PayPal invoice before each month. An unpaid invoice does not renew the service. <a href="/payment-terms.html">Payment &amp; refund terms</a>.</p>' +
           '<a class="btn btn-primary ds-cart-checkout" href="/checkout.html">Checkout</a>' +
           '<button type="button" class="btn btn-ghost ds-cart-continue" data-cart-close>Continue browsing</button>' +
         '</div>' +
