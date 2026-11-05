@@ -84,6 +84,13 @@
     'copy-standard':          { name: 'Website copywriting — Standard', price: 400, recurring: false }
   };
 
+  /* Stops a casual edit of a price on the catalog object. It does not stop
+     someone from replacing these functions, and it is not a server check. */
+  Object.keys(CATALOG).forEach(function (slug) {
+    Object.freeze(CATALOG[slug]);
+  });
+  Object.freeze(CATALOG);
+
   /* Older links and saved carts map to the tier that kept the previous price. */
   var ALIASES = {
     'website': 'website-standard',
@@ -336,6 +343,9 @@
       if (res.ok) {
         input.value = '';
         msg.textContent = 'Code applied.';
+      } else if (codeApplied) {
+        input.value = '';
+        msg.textContent = 'Code applied.';
       } else if (res.reason === 'ineligible') {
         msg.textContent = "That code doesn't apply to this order.";
       } else {
@@ -416,8 +426,14 @@
     return Math.round(sum * 100) / 100;
   }
 
+  /* $1 is only the monthly-only placeholder. Rush with no one-time items is $0. */
+  function canChargeNow() {
+    if (getPayableItems().length) return getPayableTotal() > 0;
+    return hasRecurring();
+  }
+
   function amountDueToday() {
-    if (!getPayableItems().length) return getItems().length ? 1 : 0;
+    if (!getPayableItems().length) return hasRecurring() ? 1 : 0;
     return getPayableTotal();
   }
 
@@ -481,9 +497,45 @@
     });
 
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && root.classList.contains('open')) close();
+      if (!root.classList.contains('open')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      var items = focusableIn(els.drawer);
+      if (!items.length) {
+        e.preventDefault();
+        return;
+      }
+      var first = items[0];
+      var last = items[items.length - 1];
+      var inside = els.drawer.contains(document.activeElement);
+      if (!inside) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+        return;
+      }
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     });
   }
+
+  function focusableIn(root) {
+    var nodes = root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+    return Array.prototype.filter.call(nodes, function (el) {
+      if (el.closest('[hidden]')) return false;
+      return el.getClientRects().length > 0;
+    });
+  }
+
+  var lastFocus = null;
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -542,7 +594,13 @@
         els.list.hidden = !showList;
         if (showList) els.listTotal.textContent = money(list);
       }
-      if (els.placeholder) els.placeholder.hidden = !(items.length && !getPayableItems().length);
+      if (els.placeholder) {
+        var rushOnly = items.some(function (it) { return it.rush; }) && !getPayableItems().length && !hasRecurring();
+        var monthlyHold = items.length && !getPayableItems().length && hasRecurring();
+        els.placeholder.hidden = !(rushOnly || monthlyHold);
+        if (rushOnly) els.placeholder.textContent = 'Rush is 35% of the one-time items. Nothing is due until you add one.';
+        else if (monthlyHold) els.placeholder.textContent = 'This $1 is a placeholder. The monthly price is invoiced later.';
+      }
       els.recurringNote.hidden = !hasRecurring();
       var off = discountAmount();
       if (els.discount) {
@@ -562,11 +620,14 @@
 
   function open() {
     if (!els.root) buildDrawer();
+    lastFocus = document.activeElement;
     render();
     els.root.classList.add('open');
     els.drawer.setAttribute('aria-hidden', 'false');
     els.drawer.removeAttribute('inert');
     document.body.classList.add('ds-cart-lock');
+    var closeBtn = els.drawer.querySelector('.ds-cart-close');
+    if (closeBtn) closeBtn.focus();
   }
 
   function close() {
@@ -575,6 +636,9 @@
     els.drawer.setAttribute('aria-hidden', 'true');
     els.drawer.setAttribute('inert', '');
     document.body.classList.remove('ds-cart-lock');
+    var back = lastFocus;
+    lastFocus = null;
+    if (back && typeof back.focus === 'function') back.focus();
   }
 
   /* ------------------------------------------------------------------ */
@@ -641,6 +705,8 @@
     getPayableTotal: getPayableTotal,
     getTotal: getTotal,
     amountDueToday: amountDueToday,
+    canChargeNow: canChargeNow,
+    discountCodeOn: function () { return codeApplied; },
     monthlyLaterTotal: monthlyLaterTotal,
     getCount: getCount,
     hasRecurring: hasRecurring,

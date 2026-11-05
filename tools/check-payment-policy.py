@@ -38,7 +38,7 @@ ANCHORS = (
     "contact",
 )
 HASHES = {
-    "createOrder": "bb2ea3e1a5df817033d44aa520f432df3ec2c396f750ffdbb85fa837ce3997f3",
+    "createOrder": "2b3eb57149b3cc3248d921f9c3d29093442d1ec4da7677b2de80cbb24495ab61",
     "rushAmount": "49887eccfa56b65a3f7fb136519c17332fb091a936d2beae73b05719b5f70b62",
     "getPayableTotal": "83b2201d0b805aec5b6fd5ff6268eeb25015e3b665701809e02e0df8bfd71c5c",
     "discountAmount": "24bc5405c1a6a62f26147a2d8a3c4b38cfd3ec8bfb1d17ebfb3a86f760c4bba8",
@@ -163,8 +163,20 @@ if missing_footer:
 else:
     ok(f"payment-terms link in {sum(1 for p in footer_pages if 'footer-links' in p.read_text())} footers")
 
+missing_privacy = []
+for path in footer_pages:
+    text = path.read_text()
+    if "footer-links" not in text:
+        continue
+    if "privacy.html" not in text:
+        missing_privacy.append(str(path.relative_to(ROOT)))
+if missing_privacy:
+    fail("footer missing privacy page: " + ", ".join(missing_privacy))
+else:
+    ok("privacy link in every footer")
+
 home_first = re.search(
-    r'data-nav="home".*?data-nav="blog".*?data-nav="contact".*?data-nav="esports".*?data-nav="gallery".*?data-nav="payment".*?data-nav="process".*?data-nav="services".*?data-nav="work"',
+    r'data-nav="home".*?data-nav="blog".*?data-nav="contact".*?data-nav="esports".*?data-nav="gallery".*?data-nav="payment".*?data-nav="privacy".*?data-nav="process".*?data-nav="services".*?data-nav="work"',
     (ROOT / "partials" / "footer.html").read_text(),
     re.S,
 )
@@ -178,6 +190,39 @@ if "https://desanya.tech/payment-terms.html" not in sitemap:
     fail("sitemap missing payment-terms.html")
 else:
     ok("sitemap lists payment-terms.html")
+
+if "https://desanya.tech/privacy.html" not in sitemap:
+    fail("sitemap missing privacy.html")
+else:
+    ok("sitemap lists privacy.html")
+
+privacy_path = ROOT / "privacy.html"
+if not privacy_path.exists():
+    fail("privacy.html is missing")
+else:
+    privacy_main = privacy_path.read_text().split("<main", 1)[1].split("</main>", 1)[0]
+    plow = privacy_main.lower()
+    if "llc" in plow:
+        fail("privacy page calls the studio an LLC")
+    else:
+        ok("privacy page does not call the studio an LLC")
+    if "Niota, TN" not in privacy_main:
+        fail("privacy page missing Niota, TN")
+    else:
+        ok("privacy page city only")
+    if "firefly-hollow/privacy/" not in privacy_main:
+        fail("privacy page does not point at the separate game policy")
+    else:
+        ok("website privacy stays separate from the game policy")
+    if "desanya_last_order" not in privacy_main or "thanks/#receipt" not in privacy_main:
+        fail("privacy page does not describe the receipt gate")
+    else:
+        ok("privacy page describes the receipt gate")
+    invented = [phrase for phrase in ("we retain analytics", "complies with", "retention period of") if phrase in plow]
+    if invented:
+        fail("privacy page states an unsupported retention or compliance claim: " + ", ".join(invented))
+    else:
+        ok("privacy page does not invent a retention period")
 
 if not (ROOT / "services.html").exists() or not (ROOT / "contact.html").exists():
     fail("an existing page is missing")
