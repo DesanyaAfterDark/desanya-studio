@@ -84,8 +84,8 @@
     'copy-standard':          { name: 'Website copywriting — Standard', price: 400, recurring: false }
   };
 
-  /* Stops a casual edit of a price on the catalog object. It does not stop
-     someone from replacing these functions, and it is not a server check. */
+  /* Stops a casual assignment to a price on this page. It is not a security
+     control and it does not check the amount PayPal captures. */
   Object.keys(CATALOG).forEach(function (slug) {
     Object.freeze(CATALOG[slug]);
   });
@@ -179,7 +179,9 @@
     'website-premium': true
   };
   var DISCOUNT_FLAG_KEY = 'desanya_adj_v1';
+  var DISCOUNT_CODE_KEY = 'desanya_discount_code';
   var codeApplied = false;
+  var appliedCode = '';
 
   function discountsEnabled() {
     return DISCOUNTS_ENABLED === true;
@@ -214,16 +216,26 @@
 
   function saveDiscountFlag() {
     try {
-      if (codeApplied) sessionStorage.setItem(DISCOUNT_FLAG_KEY, '1');
-      else sessionStorage.removeItem(DISCOUNT_FLAG_KEY);
+      if (codeApplied) {
+        sessionStorage.setItem(DISCOUNT_FLAG_KEY, '1');
+        if (appliedCode) sessionStorage.setItem(DISCOUNT_CODE_KEY, appliedCode);
+      } else {
+        sessionStorage.removeItem(DISCOUNT_FLAG_KEY);
+        sessionStorage.removeItem(DISCOUNT_CODE_KEY);
+        appliedCode = '';
+      }
     } catch (e) { /* ignore */ }
   }
 
   function loadDiscountFlag() {
     codeApplied = false;
+    appliedCode = '';
     if (!discountLive()) return;
     try {
-      if (sessionStorage.getItem(DISCOUNT_FLAG_KEY) === '1') codeApplied = true;
+      if (sessionStorage.getItem(DISCOUNT_FLAG_KEY) === '1') {
+        codeApplied = true;
+        appliedCode = sessionStorage.getItem(DISCOUNT_CODE_KEY) || '';
+      }
     } catch (e) { /* ignore */ }
   }
 
@@ -270,6 +282,7 @@
         return { ok: false, reason: 'ineligible' };
       }
       codeApplied = true;
+      appliedCode = code;
       saveDiscountFlag();
       render();
       return { ok: true };
@@ -707,6 +720,7 @@
     amountDueToday: amountDueToday,
     canChargeNow: canChargeNow,
     discountCodeOn: function () { return codeApplied; },
+    getDiscountCode: function () { return codeApplied ? appliedCode : ''; },
     monthlyLaterTotal: monthlyLaterTotal,
     getCount: getCount,
     hasRecurring: hasRecurring,

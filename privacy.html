@@ -764,28 +764,39 @@
 
         <h2 id="what-stays-here">What this website stores</h2>
         <p>The site is static files. It has no customer accounts and no database of form submissions. It does not run ads.</p>
-        <p>Your browser can keep three values for this site:</p>
+        <p>Your browser can keep these values for this site:</p>
         <ul>
           <li><strong>Cart.</strong> <code>desanya_cart_v1</code> in local storage is the service id and quantity. It does not store a custom price.</li>
-          <li><strong>Discount flag.</strong> <code>desanya_adj_v1</code> in session storage records whether a discount code is on for this visit.</li>
-          <li><strong>Receipt.</strong> After PayPal reports a completed capture, <code>desanya_last_order</code> in session storage keeps the order id, capture id, status, currency, amount, and the name and email typed at checkout. The thanks page shows a payment only from that record, and only at <code>thanks/#receipt</code>. Opening the thanks address by itself does not show a payment.</li>
+          <li><strong>Discount flag.</strong> <code>desanya_adj_v1</code> in session storage records whether a discount code is on for this visit. <code>desanya_discount_code</code> keeps the code text for that visit after it is accepted. It is removed when the code is removed or the discount window is closed.</li>
+          <li><strong>Receipt.</strong> After a completed capture response, <code>desanya_last_order</code> in session storage keeps the order id, capture id, status, currency, amount, and the name and email typed at checkout. The thanks page shows a payment only from that saved record, and only at <code>thanks/#receipt</code>. That record is stored by this browser. It is not a receipt issued by a Desanya Studio server. Opening the thanks address by itself does not show a payment.</li>
         </ul>
         <p>Clearing this site’s data in the browser removes those values. This page does not set a retention period for them.</p>
 
         <h2 id="forms">Forms</h2>
         <p>The booking form, the order form, and the chat quote form send a POST to FormSubmit at <a href="https://formsubmit.co/">formsubmit.co</a>, addressed to desanyaafterdark@gmail.com. Depending on the form, the fields can include name, email, phone, business name, service, project details, preferred contact, a time slot, a consent checkbox, and <code>utm_source</code>, <code>utm_medium</code>, and <code>utm_campaign</code> when those were in the page address. A hidden honeypot field is included. The forms set FormSubmit’s <code>_captcha</code> field to true, which asks FormSubmit to use its captcha. After FormSubmit accepts a submission, it sends the browser to this site’s thanks page.</p>
-        <p>Those submissions are not stored in this website’s files. FormSubmit’s privacy terms say the form owner is responsible for the information collected through the form, and that FormSubmit sends that information by email. FormSubmit also documents an API that can list past submissions, so this page does not claim that FormSubmit deletes them on a schedule. No retention period for those emails is set in this website’s code.</p>
+        <p>Those submissions are not stored in this website’s files. Email delivery through FormSubmit to the studio address is already in use. FormSubmit’s privacy terms say the form owner is responsible for the information collected through the form, and that FormSubmit sends that information by email. FormSubmit also documents an API that can list past submissions. A read of FormSubmit’s public site did not show the dashboard, so whether FormSubmit stores submissions, and for how long, is still unknown. This page does not claim a deletion schedule. No retention period for those emails is set in this website’s code.</p>
         <p>FormSubmit sources used for this description: <a href="https://formsubmit.co/privacy.pdf">formsubmit.co/privacy.pdf</a> (the PDF states an effective date of January 17, 2019) and <a href="https://formsubmit.co/api-documentation">formsubmit.co/api-documentation</a> (Get Submissions).</p>
 
         <h2 id="analytics">Analytics</h2>
-        <p>Pages load Google Analytics 4 through the Google tag, measurement ID G-K3MKEG3RFH. The site code can send <code>add_to_cart</code>, <code>generate_lead</code> when a FormSubmit form is submitted, <code>purchase</code> after a completed PayPal capture, and click events for phone, email, PayPal, Calendly, and social profile links.</p>
-        <p>Google’s documentation says the default GA4 tag uses first-party cookies named <code>_ga</code> and <code>_ga_</code> plus the container id to distinguish users and sessions, with a default expiration of two years, and that a default setup collects user counts, session statistics, approximate location, and browser and device information. This site’s code does not override that cookie expiration and does not turn on Consent Mode. This page does not state how long Google keeps the reports.</p>
-        <p>Google sources: <a href="https://support.google.com/analytics/answer/11397207">GA4 cookie usage</a> and <a href="https://support.google.com/analytics/answer/11593727">GA4 data collection</a>.</p>
+        <p>Pages load Google Analytics 4 through the Google tag, measurement ID G-K3MKEG3RFH. The site code can send <code>add_to_cart</code>, <code>generate_lead</code> when a FormSubmit form is submitted, <code>purchase</code> after a completed PayPal capture, and click events for phone, email, PayPal, Calendly, and social profile links. The site code does not set a cookie expiration and does not send Consent Mode updates.</p>
+        <p>A read-only look at the Google Analytics property for that measurement ID on 5 November 2026 showed these property settings, which are not the same thing as the cookies in the browser:</p>
+        <ul>
+          <li>Event data retention was 2 months.</li>
+          <li>User data retention was 14 months, with reset on new activity turned on.</li>
+          <li>The screen said those retention controls do not affect standard aggregate reports.</li>
+          <li>Google signals was off. User-provided data collection was off.</li>
+          <li>Granular location and device data, and ads personalization, were allowed for every region listed on that screen.</li>
+          <li>Enhanced measurement was on for page views, scrolls, outbound clicks, site search, video engagement, file downloads, and form interactions.</li>
+          <li>Email redaction was on. URL query-parameter redaction was not turned on.</li>
+        </ul>
+        <p>The consent screen was labeled good. That is Google’s status label. It is not a legal review, and it does not mean this website shows a consent banner or that a visitor has consented. The signals <code>analytics_storage</code>, <code>ad_storage</code>, <code>ad_user_data</code>, and <code>ad_personalization</code> were inactive. Default consent does not automatically mark a visitor as consented.</p>
+        <p>Cookie lifetime is separate from those retention settings. This website’s code does not choose a cookie expiration. Google’s tag documentation says the default <code>_ga</code> cookies expire after two years unless a site overrides them. This page does not treat that documented cookie default as the 2-month or 14-month retention settings above.</p>
+        <p>Google sources for the cookie and default collection descriptions: <a href="https://support.google.com/analytics/answer/11397207">GA4 cookie usage</a> and <a href="https://support.google.com/analytics/answer/11593727">GA4 data collection</a>.</p>
 
         <h2 id="checkout">Checkout and PayPal</h2>
         <p>Checkout asks for a name and email in the browser. The name is placed in the PayPal order description. The email is not sent to a Desanya Studio server. PayPal’s script loads on the checkout page. Payment happens at PayPal. PayPal’s privacy statement describes what PayPal collects for a payment, including transaction details and device data. This site does not see or store card numbers.</p>
-        <p>The on-page receipt uses the capture PayPal returns: status, currency, and amount. A completed USD capture is what the thanks page can show. A canceled or incomplete result leaves the cart in place and does not show a payment.</p>
-        <p>Catalog prices are published in the page. The amount sent to PayPal is calculated in the browser. Freezing the price list in the page stops a casual edit of those numbers. It does not replace a check on a server. PayPal still receives the amount the browser submits.</p>
+        <p>The on-page note uses the capture response the browser received: status, currency, and amount. A completed USD capture is what the thanks page can show. A canceled or incomplete result leaves the cart in place and does not show a payment. The saved note is not a receipt issued by a Desanya Studio server.</p>
+        <p>Catalog prices are published in the page. While checkout is in its current configuration, the amount sent to PayPal is calculated in the browser. Freezing the price list in the page only stops a simple edit of that object. It is not a security control. An order checker in the site repository is not connected, and this website does not call it. PayPal receives the amount the current checkout path submits.</p>
         <p>PayPal source: <a href="https://www.paypal.com/us/legalhub/paypal/privacy-full">PayPal Privacy Statement</a>.</p>
 
         <h2 id="calendly">Scheduling</h2>
