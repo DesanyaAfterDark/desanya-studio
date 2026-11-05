@@ -31,6 +31,7 @@ PAGES = {
     "thanks/index.html": ("", True),
     "checkout.html": ("", False),
     "payment-terms.html": ("payment", False),
+    "privacy.html": ("privacy", False),
     "esports-gaming/index.html": ("esports", True),
     "knoxville-web-design.html": ("", False),
     "local-seo-google-business-profile.html": ("", False),

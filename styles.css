@@ -344,6 +344,16 @@ a:hover {
   line-height: 1.5;
 }
 
+@media (max-width: 480px) {
+  .hero-next {
+    max-width: calc(100% - 4.6rem);
+  }
+
+  body {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .page-hero .hero-price {
   margin: 0.9rem 0 0;
 }

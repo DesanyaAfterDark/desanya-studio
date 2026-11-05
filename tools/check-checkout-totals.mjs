@@ -54,7 +54,10 @@ const harness = `<!DOCTYPE html>
     var discount = Math.min(cart.getDiscount(), listTotal);
     discount = Math.round(discount * 100) / 100;
     var total = Math.round((listTotal - discount) * 100) / 100;
-    if (!items.length) return { mode: 'deposit', value: '1.00', payableNames: [] };
+    if (!items.length) {
+      if (cart.hasRecurring()) return { mode: 'deposit', value: '1.00', payableNames: [] };
+      return { mode: 'none', value: '0.00', payableNames: [] };
+    }
     return {
       mode: 'capture',
       value: total.toFixed(2),
@@ -84,6 +87,8 @@ const harness = `<!DOCTYPE html>
     rows.push(run('mixed', function (c) { c.add('website-basic'); c.add('monthly-care'); }));
     rows.push(run('monthly-only', function (c) { c.add('monthly-care'); }));
     rows.push(run('rush', function (c) { c.add('website-standard'); c.add('rush'); }));
+    rows.push(run('rush-only', function (c) { c.add('rush'); }));
+    rows.push(run('monthly-plus-rush', function (c) { c.add('monthly-care'); c.add('rush'); }));
     rows.push(run('discount-closed', function (c) {
       c.add('website-basic'); c.add('rush'); c.add('monthly-care');
     }));
@@ -159,6 +164,8 @@ const closedExpected = {
   mixed: { total: 999, payable: 900, discount: 0, recurring: true, paypal: { mode: 'capture', value: '900.00', payable: 900, discount: 0, payableNames: ['website-basic'] }, windowOpen: false },
   'monthly-only': { total: 99, payable: 0, discount: 0, recurring: true, paypal: { mode: 'deposit', value: '1.00', payableNames: [] }, windowOpen: false },
   rush: { total: 2160, payable: 2160, discount: 0, recurring: false, paypal: { mode: 'capture', value: '2160.00', payable: 2160, discount: 0, payableNames: ['website-standard', 'rush'] }, windowOpen: false },
+  'rush-only': { total: 0, payable: 0, discount: 0, recurring: false, paypal: { mode: 'none', value: '0.00', payableNames: [] }, windowOpen: false },
+  'monthly-plus-rush': { total: 99, payable: 0, discount: 0, recurring: true, paypal: { mode: 'deposit', value: '1.00', payableNames: [] }, windowOpen: false },
   'discount-closed': { total: 1314, payable: 1215, discount: 0, recurring: true, paypal: { mode: 'capture', value: '1215.00', payable: 1215, discount: 0, payableNames: ['website-basic', 'rush'] }, windowOpen: false }
 };
 
@@ -224,6 +231,8 @@ const visibleClosed = {
   mixed: { cart: { 'website-basic': 1, 'monthly-care': 1 }, due: '$900', later: '$99', list: '$999', placeholder: false, apiTotal: 999, capture: '900.00' },
   'monthly-only': { cart: { 'monthly-care': 1 }, due: '$1', later: '$99', list: null, placeholder: true, apiTotal: 99, capture: '1.00' },
   rush: { cart: { 'website-standard': 1, rush: 1 }, due: '$2,160', later: null, list: null, placeholder: false, apiTotal: 2160, capture: '2160.00' },
+  'rush-only': { cart: { rush: 1 }, due: '$0', later: null, list: null, placeholder: false, apiTotal: 0, capture: '0.00' },
+  'monthly-plus-rush': { cart: { 'monthly-care': 1, rush: 1 }, due: '$1', later: '$99', list: null, placeholder: true, apiTotal: 99, capture: '1.00' },
   'discount-closed': { cart: { 'website-basic': 1, rush: 1, 'monthly-care': 1 }, due: '$1,215', later: '$99', list: '$1,314', placeholder: false, apiTotal: 1314, capture: '1215.00' }
 };
 

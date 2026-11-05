@@ -766,6 +766,9 @@
           <p class="ds-cart-note" id="checkout-placeholder-note" hidden>
             PayPal charges this $1 placeholder today. It is credited to the first monthly invoice, or refunded in full on the original PayPal payment if the service never starts.
           </p>
+          <p class="ds-cart-note" id="checkout-nopay-note" hidden>
+            Rush delivery is 35% of the one-time items in the cart. Add a one-time service to price it. Nothing is charged for rush by itself.
+          </p>
           <p class="ds-cart-note" id="checkout-recurring-note" hidden>
             Monthly services are not charged today. Desanya Studio sends a manual PayPal invoice before each month. An unpaid invoice does not renew the service. <a href="payment-terms.html">Payment &amp; refund terms</a>.
           </p>
@@ -784,10 +787,10 @@
           <p class="checkout-error" id="checkout-error" role="alert" hidden></p>
           <div class="pay-disclosure" id="pay-disclosure">
             <h3>Before you pay with PayPal</h3>
-            <p>One-time items are charged today. Monthly items are not auto-charged here. Desanya Studio sends a manual PayPal invoice before each month, and an unpaid invoice does not renew service. A monthly-only cart uses a $1 placeholder, credited to the first monthly invoice or fully refunded on the original PayPal payment if service never starts. Refunds follow priced milestones agreed before payment. <a href="payment-terms.html">Payment &amp; refund terms</a>. Paying does not waive PayPal or bank dispute rights.</p>
+            <p>One-time items are charged today. Monthly items are not auto-charged here. Desanya Studio sends a manual PayPal invoice before each month, and an unpaid invoice does not renew service. A monthly-only cart uses a $1 placeholder, credited to the first monthly invoice or fully refunded on the original PayPal payment if service never starts. Rush by itself is not a charge. Refunds follow priced milestones agreed before payment. <a href="payment-terms.html">Payment &amp; refund terms</a>. <a href="privacy.html">Website privacy</a>. Paying does not waive PayPal or bank dispute rights.</p>
           </div>
           <div id="paypal-buttons"></div>
-          <p class="ds-cart-note">Secure checkout through PayPal. Nothing is charged until you confirm in PayPal. Not ready to pay? <a href="contact.html#book">Book a short intro</a>. Questions? You’ll hear back within 1 business day, Monday–Friday, 8:00 AM–5:00 PM — <a href="contact.html">contact us</a>.</p>
+          <p class="ds-cart-note">Secure checkout through PayPal. Nothing is charged until you confirm in PayPal. Not ready to pay? <a href="contact.html#book">Book a short intro</a>. Questions? You’ll hear back within 1 business day, Monday–Friday, 8:00 AM–5:00 PM — <a href="contact.html">contact us</a>. <a href="privacy.html">Website privacy</a>.</p>
         </section>
       </div>
     </div>
@@ -831,6 +834,7 @@
           <li><a href="esports-gaming/" data-nav="esports">Esports &amp; Gaming</a></li>
           <li><a href="gallery.html" data-nav="gallery">Gallery</a></li>
           <li><a href="payment-terms.html" data-nav="payment">Payment &amp; refund terms</a></li>
+          <li><a href="privacy.html" data-nav="privacy">Privacy</a></li>
           <li><a href="process.html" data-nav="process">Process</a></li>
           <li><a href="services.html" data-nav="services">Services</a></li>
           <li><a href="work.html" data-nav="work">Work</a></li>
@@ -863,10 +867,10 @@
     </div>
 
     <div class="container footer-bottom">
-      <p class="footer-privacy">Privacy: forms are delivered by email through FormSubmit and nothing is stored on this site. We use Google Analytics to see how visitors use the site. No ads, and we never sell your info.</p>
+      <p class="footer-privacy">Privacy: forms are emailed through FormSubmit and are not stored on this site. Google Analytics, fonts, and checkout use your browser as described on the <a href="privacy.html">privacy page</a>.</p>
       <p class="footer-copy">&copy; <span data-year>2026</span> Desanya Studio</p>
     </div>
-    <script src="assets/cart.js?v=8" defer></script>
+    <script src="assets/cart.js?v=9" defer></script>
   </footer>
   <!-- /@partial:footer -->
 
@@ -935,7 +939,7 @@
 
       <div class="chat-lead" data-chat-lead hidden>
         <h3 class="chat-lead-title">Get a quote</h3>
-        <p class="chat-lead-lede">Share your name, email, and what you need. Desanya Studio replies by email — nothing is stored on this site.</p>
+        <p class="chat-lead-lede">Share your name, email, and what you need. Desanya Studio replies by email. The form is not stored on this site. <a href="/privacy.html">Website privacy</a>.</p>
         <form class="chat-lead-form" data-chat-lead-form action="https://formsubmit.co/desanyaafterdark@gmail.com" method="POST">
           <input type="hidden" name="_subject" value="New quote request — desanya.tech">
           <input type="hidden" name="_template" value="table">
@@ -1143,8 +1147,13 @@
         listRow.hidden = !showList;
         if (showList) document.getElementById('checkout-list-total').textContent = money(list);
         var payable = cart.getPayableItems ? cart.getPayableItems() : [];
-        document.getElementById('checkout-placeholder-note').hidden = payable.length !== 0;
+        var recurringOnly = payable.length === 0 && cart.hasRecurring();
+        var rushHold = items.length && payable.length === 0 && !cart.hasRecurring();
+        document.getElementById('checkout-placeholder-note').hidden = !recurringOnly;
+        document.getElementById('checkout-nopay-note').hidden = !rushHold;
         document.getElementById('checkout-recurring-note').hidden = !cart.hasRecurring();
+        var payBox = document.getElementById('paypal-buttons');
+        if (payBox) payBox.hidden = !canPayNow(cart);
 
         linesEl.onclick = function (e) {
           var dec = e.target.closest('[data-co-dec]');
@@ -1163,6 +1172,41 @@
 
       function refresh() { renderSummary(); }
 
+      function canPayNow(cart) {
+        if (cart && typeof cart.canChargeNow === 'function') return cart.canChargeNow();
+        var payable = cart && cart.getPayableItems ? cart.getPayableItems() : [];
+        if (payable.length) return true;
+        return !!(cart && cart.hasRecurring && cart.hasRecurring());
+      }
+
+      function readCapture(details) {
+        if (!details || details.status !== 'COMPLETED' || !details.id) return null;
+        var units = details.purchase_units || [];
+        var found = null;
+        var count = 0;
+        units.forEach(function (unit) {
+          var list = unit && unit.payments && unit.payments.captures ? unit.payments.captures : [];
+          list.forEach(function (cap) {
+            count += 1;
+            found = cap;
+          });
+        });
+        if (count !== 1 || !found || found.status !== 'COMPLETED' || !found.id) return null;
+        var amount = found.amount || {};
+        var value = String(amount.value || '');
+        var currency = String(amount.currency_code || '');
+        if (currency !== 'USD' || !/^\d+\.\d{2}$/.test(value)) return null;
+        var num = Number(value);
+        if (!isFinite(num) || num <= 0) return null;
+        return {
+          orderId: String(details.id),
+          captureId: String(found.id),
+          status: 'COMPLETED',
+          currency: 'USD',
+          amount: value
+        };
+      }
+
       function validCustomer() {
         var name = document.getElementById('co-name').value.trim();
         var email = document.getElementById('co-email').value.trim();
@@ -1178,9 +1222,11 @@
       function initPayPal() {
         renderSummary();
         if (!window.paypal || !window.paypal.Buttons) {
-          var err = document.getElementById('checkout-error');
-          err.textContent = 'PayPal could not load. Please check your connection and refresh.';
-          err.hidden = false;
+          if (canPayNow(window.DesanyaCart)) {
+            var err = document.getElementById('checkout-error');
+            err.textContent = 'PayPal could not load. Please check your connection and refresh.';
+            err.hidden = false;
+          }
           return;
         }
         window.paypal.Buttons({
@@ -1195,6 +1241,12 @@
             } catch (err) {}
             if (!itemName) itemName = (window.location.pathname || '').split('/').filter(Boolean).pop() || 'checkout';
             if (window.desanyaTrack) window.desanyaTrack('paypal_click', { item_name: itemName });
+            if (!canPayNow(window.DesanyaCart)) {
+              var hold = document.getElementById('checkout-error');
+              hold.textContent = 'Nothing is due today. Add a one-time service before paying.';
+              hold.hidden = false;
+              return actions.reject();
+            }
             return validCustomer() ? actions.resolve() : actions.reject();
           },
           createOrder: function (data, actions) {
@@ -1228,8 +1280,12 @@
                 };
               })
             }];
-            // PayPal requires at least one item; recurring-only carts fall back to a $1 deposit line.
+            // PayPal requires at least one item. Only a recurring cart with nothing
+            // payable today uses the $1 placeholder. Rush alone must not.
             if (!items.length) {
+              if (!cart.hasRecurring || !cart.hasRecurring()) {
+                return Promise.reject(new Error('Nothing to charge'));
+              }
               var all = cart.getItems();
               purchaseUnits = [{
                 description: 'Desanya Studio — ' + (customer ? customer.name : 'order') + ' (monthly services arranged after checkout)',
@@ -1243,12 +1299,19 @@
           onApprove: function (data, actions) {
             return actions.order.capture().then(function (details) {
               var cart = window.DesanyaCart;
+              var capture = readCapture(details);
+              var err = document.getElementById('checkout-error');
+              if (!capture) {
+                err.textContent = 'PayPal did not confirm a completed USD payment. Your cart is still here.';
+                err.hidden = false;
+                return;
+              }
               try {
                 if (window.gtag) {
                   window.gtag('event', 'purchase', {
-                    transaction_id: details.id,
-                    value: cart.getTotal(),
-                    currency: 'USD'
+                    transaction_id: capture.captureId,
+                    value: Number(capture.amount),
+                    currency: capture.currency
                   });
                 }
               } catch (e) {}
@@ -1256,13 +1319,27 @@
               var email = document.getElementById('co-email').value.trim();
               try {
                 sessionStorage.setItem('desanya_last_order', JSON.stringify({
-                  id: details.id, name: name, email: email,
-                  total: cart.getTotal(), recurring: cart.hasRecurring()
+                  orderId: capture.orderId,
+                  captureId: capture.captureId,
+                  status: capture.status,
+                  currency: capture.currency,
+                  amount: capture.amount,
+                  name: name,
+                  email: email
                 }));
-              } catch (e) {}
+              } catch (e) {
+                err.textContent = 'Payment may have completed, but this browser could not store the receipt. Check PayPal before ordering again. Your cart is still here.';
+                err.hidden = false;
+                return;
+              }
               cart.clear();
-              window.location.href = 'thanks/?paid=1';
+              window.location.href = 'thanks/#receipt';
             });
+          },
+          onCancel: function () {
+            var err = document.getElementById('checkout-error');
+            err.textContent = 'Payment canceled. Your cart is still here.';
+            err.hidden = false;
           },
           onError: function () {
             var err = document.getElementById('checkout-error');
