@@ -1333,6 +1333,7 @@
               }
               function alreadyCaptured(created) {
                 try {
+                  if (sessionStorage.getItem('desanya_captured_' + created.orderId) === '1') return true;
                   var saved = JSON.parse(sessionStorage.getItem('desanya_last_order') || 'null');
                   return !!(saved && saved.orderId === created.orderId && saved.captureId);
                 } catch (e) {
@@ -1413,6 +1414,7 @@
                 idempotencyKey: captureKey,
                 expectedAmount: window.__desanyaExpectedAmount
               }).then(function (capture) {
+                try { sessionStorage.setItem('desanya_captured_' + capture.orderId, '1'); } catch (e) {}
                 try {
                   if (window.gtag) {
                     window.gtag('event', 'purchase', {

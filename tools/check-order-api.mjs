@@ -623,6 +623,8 @@ const checkoutSource = readFileSync(new URL('../checkout.html', import.meta.url)
 const createSlice = checkoutSource.slice(checkoutSource.indexOf('createOrder: function'), checkoutSource.indexOf('onApprove: function'));
 const serverCaptureSlice = checkoutSource.slice(checkoutSource.indexOf("if (mode.mode === 'server')", checkoutSource.indexOf('onApprove: function')), checkoutSource.indexOf('return actions.order.capture()'));
 expectEqual('checkout rotates the cart key once after owner recovery is exhausted', createSlice.includes('err.status !== 401') && createSlice.includes('rotateOrderIdempotencyKey(cartForApi)'), true);
+expectEqual('checkout treats a stored capture marker as an already captured order', createSlice.includes("sessionStorage.getItem('desanya_captured_' + created.orderId) === '1'") && createSlice.includes('desanya_last_order'), true);
+expectEqual('checkout records each successful server capture', serverCaptureSlice.includes("sessionStorage.setItem('desanya_captured_' + capture.orderId, '1')"), true);
 expectEqual('checkout forgets the cart key before clearing after capture', serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') >= 0 && serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') < serverCaptureSlice.indexOf('window.DesanyaCart.clear()'), true);
 const workerSource = readFileSync(new URL('../worker/src/handler.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../worker/src/ledger.js', import.meta.url), 'utf8')
