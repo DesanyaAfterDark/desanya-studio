@@ -121,11 +121,35 @@ export async function quoteCart(lines, { now = new Date(), discountCode = '' } =
   const valueCents = itemTotalCents - appliedDiscount;
   if (valueCents !== chargeCents && mode === 'capture') return fail('quote_mismatch');
 
+  const requested = [];
+  let laterRecurringCents = 0;
+  for (const [slug, qty] of [...qtyBySlug.entries()].sort((a, b) => a[0] < b[0] ? -1 : 1)) {
+    const item = CATALOG[slug];
+    const quantity = item.rush ? 1 : qty;
+    const unitCents = Math.round(Number(item.price) * 100);
+    if (item.recurring) laterRecurringCents += unitCents * quantity;
+    requested.push({
+      slug,
+      name: String(item.name).slice(0, 127),
+      quantity: String(quantity),
+      catalogUnitAmount: money(unitCents),
+      recurring: item.recurring === true
+    });
+  }
+  const laterRecurring = money(laterRecurringCents);
   const canonical = JSON.stringify({
     currency: 'USD',
     mode,
     value: money(valueCents),
-    lines: paypalItems.map((item) => ({ slug: item.slug, quantity: item.quantity, unitAmount: item.unitAmount }))
+    discount: money(appliedDiscount),
+    laterRecurring,
+    charge: paypalItems.map((item) => ({ slug: item.slug, quantity: item.quantity, unitAmount: item.unitAmount })),
+    requested: requested.map((item) => ({
+      slug: item.slug,
+      quantity: item.quantity,
+      catalogUnitAmount: item.catalogUnitAmount,
+      recurring: item.recurring
+    }))
   });
   const cartHash = await sha256Hex(canonical);
   return {
@@ -136,6 +160,8 @@ export async function quoteCart(lines, { now = new Date(), discountCode = '' } =
     cartHash,
     itemTotal: money(itemTotalCents),
     discount: money(appliedDiscount),
+    laterRecurring,
+    requested,
     items: paypalItems
   };
 }

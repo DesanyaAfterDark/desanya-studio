@@ -755,6 +755,16 @@
             <tbody id="receipt-lines"></tbody>
           </table>
           <p class="receipt-amount">Amount paid <strong id="receipt-amount"></strong></p>
+          <section id="receipt-future" hidden>
+            <h3>Billed later</h3>
+            <p id="receipt-later"></p>
+            <table class="receipt-lines">
+              <thead>
+                <tr><th scope="col">Requested service</th><th scope="col">Qty</th><th scope="col">Catalog price</th></tr>
+              </thead>
+              <tbody id="receipt-future-lines"></tbody>
+            </table>
+          </section>
           <div class="receipt-actions">
             <button type="button" class="btn btn-primary receipt-print" id="receipt-print">Print or save as PDF</button>
           </div>

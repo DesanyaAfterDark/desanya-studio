@@ -60,6 +60,31 @@ export function acceptServerReceipt(body) {
     if (!name || name.length > 127 || !/^\d+$/.test(quantity) || !/^\d+\.\d{2}$/.test(unitAmount)) return null;
     lines.push({ name, quantity, unitAmount });
   }
+  let requested = null;
+  if (body.requested != null) {
+    if (!Array.isArray(body.requested) || body.requested.length < 1 || body.requested.length > 30) return null;
+    requested = [];
+    for (const line of body.requested) {
+      if (!line || typeof line !== 'object' || typeof line.recurring !== 'boolean') return null;
+      const name = String(line.name || '');
+      const quantity = String(line.quantity || '');
+      const catalogUnitAmount = String(line.catalogUnitAmount || '');
+      if (!/^[a-z0-9-]+$/.test(String(line.slug || '')) || !name || name.length > 127) return null;
+      if (!/^\d+$/.test(quantity) || !/^\d+\.\d{2}$/.test(catalogUnitAmount)) return null;
+      requested.push({
+        slug: String(line.slug),
+        name,
+        quantity,
+        catalogUnitAmount,
+        recurring: line.recurring
+      });
+    }
+  }
+  let laterRecurring = '';
+  if (body.laterRecurring != null && body.laterRecurring !== '') {
+    laterRecurring = String(body.laterRecurring);
+    if (!/^\d+\.\d{2}$/.test(laterRecurring) || Number(laterRecurring) <= 0) return null;
+  }
   return {
     orderId,
     captureId,
@@ -68,6 +93,8 @@ export function acceptServerReceipt(body) {
     currency: 'USD',
     amount,
     lines,
+    requested,
+    laterRecurring,
     businessName: RECEIPT_BUSINESS,
     contactEmail: RECEIPT_CONTACT
   };
@@ -114,6 +141,30 @@ export function applyReceiptView(doc, model) {
   doc.getElementById('receipt-capture').textContent = receipt.captureId;
   doc.getElementById('receipt-date').textContent = receipt.paidAtLabel;
   doc.getElementById('receipt-amount').textContent = 'USD ' + receipt.amount;
+  const future = doc.getElementById('receipt-future');
+  const later = doc.getElementById('receipt-later');
+  const futureLines = doc.getElementById('receipt-future-lines');
+  if (future && later && futureLines) {
+    const recurring = (receipt.requested || []).filter((line) => line.recurring);
+    if (receipt.laterRecurring && recurring.length) {
+      future.hidden = false;
+      later.textContent = 'USD ' + receipt.laterRecurring + ' is billed later and is not included in the amount paid.';
+      futureLines.replaceChildren();
+      for (const line of recurring) {
+        const row = doc.createElement('tr');
+        for (const value of [line.name, line.quantity, 'USD ' + line.catalogUnitAmount]) {
+          const cell = doc.createElement('td');
+          cell.textContent = value;
+          row.appendChild(cell);
+        }
+        futureLines.appendChild(row);
+      }
+    } else {
+      future.hidden = true;
+      later.textContent = '';
+      futureLines.replaceChildren();
+    }
+  }
   const body = doc.getElementById('receipt-lines');
   body.replaceChildren();
   for (const line of receipt.lines) {

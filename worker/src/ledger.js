@@ -18,11 +18,7 @@ function copy(row) {
   return row ? { ...row } : null;
 }
 
-export function publicReceipt(record) {
-  if (!record || record.status !== 'COMPLETED' || !record.captureId || !record.orderId || !record.paidAt) return null;
-  if (record.currency !== 'USD' || !/^\d+\.\d{2}$/.test(String(record.value || ''))) return null;
-  let lines;
-  try { lines = JSON.parse(record.linesJson); } catch { return null; }
+function cleanPaidLines(lines) {
   if (!Array.isArray(lines) || lines.length < 1 || lines.length > 20) return null;
   const clean = [];
   for (const line of lines) {
@@ -34,16 +30,53 @@ export function publicReceipt(record) {
     if (!/^\d+\.\d{2}$/.test(unitAmount)) return null;
     clean.push({ name, quantity, unitAmount });
   }
-  return {
+  return clean;
+}
+
+function cleanRequested(lines) {
+  if (!Array.isArray(lines) || lines.length < 1 || lines.length > 30) return null;
+  const clean = [];
+  for (const line of lines) {
+    if (!line || typeof line !== 'object') return null;
+    const slug = String(line.slug || '');
+    const name = String(line.name || '');
+    const quantity = String(line.quantity || '');
+    const catalogUnitAmount = String(line.catalogUnitAmount || '');
+    if (!/^[a-z0-9-]+$/.test(slug) || !name || name.length > 127) return null;
+    if (!/^\d+$/.test(quantity) || Number(quantity) < 1) return null;
+    if (!/^\d+\.\d{2}$/.test(catalogUnitAmount) || typeof line.recurring !== 'boolean') return null;
+    clean.push({ slug, name, quantity, catalogUnitAmount, recurring: line.recurring });
+  }
+  return clean;
+}
+
+export function publicReceipt(record) {
+  if (!record || record.status !== 'COMPLETED' || !record.captureId || !record.orderId || !record.paidAt) return null;
+  if (record.currency !== 'USD' || !/^\d+\.\d{2}$/.test(String(record.value || ''))) return null;
+  let parsed;
+  try { parsed = JSON.parse(record.linesJson); } catch { return null; }
+  const legacy = Array.isArray(parsed);
+  const paid = cleanPaidLines(legacy ? parsed : parsed && parsed.paid);
+  if (!paid) return null;
+  const body = {
     orderId: record.orderId,
     captureId: record.captureId,
     paidAt: record.paidAt,
     currency: 'USD',
     amount: record.value,
-    lines: clean,
+    lines: paid,
     businessName: RECEIPT_BUSINESS,
     contactEmail: RECEIPT_CONTACT
   };
+  if (legacy) return body;
+  if (!parsed || parsed.version !== 2) return null;
+  const requested = cleanRequested(parsed.requested);
+  if (!requested) return null;
+  body.requested = requested;
+  const later = String(parsed.laterRecurring || '0.00');
+  if (!/^\d+\.\d{2}$/.test(later)) return null;
+  if (later !== '0.00') body.laterRecurring = later;
+  return body;
 }
 
 export function createLedger(store) {
@@ -52,10 +85,10 @@ export function createLedger(store) {
       const existing = store.getIdem(input.idempotencyKey);
       if (existing) {
         if (existing.cartHash !== input.cartHash || existing.value !== input.value) return { action: 'conflict' };
-        if (existing.orderId) return { action: 'replay', orderId: existing.orderId, value: existing.value };
+        if (existing.orderId) return { action: 'replay', orderId: existing.orderId, value: existing.value, ownerHash: existing.ownerHash || '' };
         if (existing.startedAt && now - existing.startedAt < IN_FLIGHT_MS) return { action: 'in_progress' };
         store.markStarted(input.idempotencyKey, now);
-        return { action: 'resume' };
+        return { action: 'resume', ownerHash: existing.ownerHash || '' };
       }
       try {
         store.insertIdem({
@@ -68,16 +101,21 @@ export function createLedger(store) {
           discount: input.discount,
           orderId: '',
           status: 'reserving',
-          startedAt: now
+          startedAt: now,
+          ownerHash: ''
         });
       } catch (err) {
         if (!isUnique(err)) throw err;
         return this.reserveCreate(input, now);
       }
-      return { action: 'resume' };
+      return { action: 'resume', ownerHash: '' };
+    },
+    claimOwner(idempotencyKey, ownerHash, now) {
+      return store.claimOwner(idempotencyKey, ownerHash, now);
     },
     markRetryable(idempotencyKey) {
       store.markStarted(idempotencyKey, 0);
+      store.clearOwner(idempotencyKey);
     },
     saveCreated({ idempotencyKey, orderId }) {
       const idem = store.getIdem(idempotencyKey);
@@ -99,7 +137,8 @@ export function createLedger(store) {
         captureStartedAt: 0,
         paidAt: '',
         receiptToken: '',
-        receiptIdempotencyKey: ''
+        receiptIdempotencyKey: '',
+        ownerHash: idem.ownerHash || ''
       });
       store.setIdemOrder(idempotencyKey, orderId);
     },
@@ -143,6 +182,17 @@ export function memoryStore() {
     markStarted(key, startedAt) {
       const row = idem.get(key);
       if (row) row.startedAt = startedAt;
+    },
+    claimOwner(key, ownerHash, now) {
+      const row = idem.get(key);
+      if (!row || row.orderId || row.ownerHash) return false;
+      row.ownerHash = ownerHash;
+      row.startedAt = now;
+      return true;
+    },
+    clearOwner(key) {
+      const row = idem.get(key);
+      if (row && !row.orderId) row.ownerHash = '';
     },
     setIdemOrder(key, orderId) {
       const row = idem.get(key);
@@ -204,7 +254,8 @@ function mapIdem(row) {
     discount: row.discount,
     orderId: row.order_id || '',
     status: row.status,
-    startedAt: Number(row.started_at || 0)
+    startedAt: Number(row.started_at || 0),
+    ownerHash: row.owner_hash || ''
   };
 }
 
@@ -226,7 +277,8 @@ function mapOrder(row) {
     captureStartedAt: Number(row.capture_started_at || 0),
     paidAt: row.paid_at || '',
     receiptToken: row.receipt_token || '',
-    receiptIdempotencyKey: row.receipt_idempotency_key || ''
+    receiptIdempotencyKey: row.receipt_idempotency_key || '',
+    ownerHash: row.owner_hash || ''
   };
 }
 
@@ -247,8 +299,10 @@ export function sqlStore(sql) {
     discount TEXT NOT NULL,
     order_id TEXT NOT NULL DEFAULT '',
     status TEXT NOT NULL,
-    started_at INTEGER NOT NULL DEFAULT 0
+    started_at INTEGER NOT NULL DEFAULT 0,
+    owner_hash TEXT NOT NULL DEFAULT ''
   )`);
+  try { sql.exec("ALTER TABLE idempotency ADD COLUMN owner_hash TEXT NOT NULL DEFAULT ''"); } catch { /* column already present */ }
   sql.exec(`CREATE TABLE IF NOT EXISTS orders (
     order_id TEXT PRIMARY KEY,
     idempotency_key TEXT NOT NULL UNIQUE,
@@ -265,8 +319,10 @@ export function sqlStore(sql) {
     capture_started_at INTEGER NOT NULL DEFAULT 0,
     paid_at TEXT NOT NULL DEFAULT '',
     receipt_token TEXT NOT NULL DEFAULT '',
-    receipt_idempotency_key TEXT NOT NULL DEFAULT ''
+    receipt_idempotency_key TEXT NOT NULL DEFAULT '',
+    owner_hash TEXT NOT NULL DEFAULT ''
   )`);
+  try { sql.exec("ALTER TABLE orders ADD COLUMN owner_hash TEXT NOT NULL DEFAULT ''"); } catch { /* column already present */ }
   return {
     getIdem(key) {
       return mapIdem(first(sql, 'SELECT * FROM idempotency WHERE idempotency_key = ?', [key]));
@@ -282,6 +338,16 @@ export function sqlStore(sql) {
     markStarted(key, startedAt) {
       sql.exec('UPDATE idempotency SET started_at = ? WHERE idempotency_key = ?', startedAt, key);
     },
+    claimOwner(key, ownerHash, now) {
+      const row = mapIdem(first(sql, 'SELECT * FROM idempotency WHERE idempotency_key = ?', [key]));
+      if (!row || row.orderId || row.ownerHash) return false;
+      sql.exec('UPDATE idempotency SET owner_hash = ?, started_at = ? WHERE idempotency_key = ? AND order_id = \'\' AND owner_hash = \'\'', ownerHash, now, key);
+      const saved = mapIdem(first(sql, 'SELECT * FROM idempotency WHERE idempotency_key = ?', [key]));
+      return !!(saved && saved.ownerHash === ownerHash);
+    },
+    clearOwner(key) {
+      sql.exec('UPDATE idempotency SET owner_hash = \'\' WHERE idempotency_key = ? AND order_id = \'\'', key);
+    },
     setIdemOrder(key, orderId) {
       sql.exec(`UPDATE idempotency SET order_id = ?, status = 'created', started_at = 0 WHERE idempotency_key = ?`, orderId, key);
     },
@@ -296,9 +362,9 @@ export function sqlStore(sql) {
       }
       sql.exec(
         `INSERT INTO orders
-          (order_id, idempotency_key, value, currency, cart_hash, custom_id, lines_json, item_total, discount, status, capture_id, capture_request_id, capture_started_at, paid_at, receipt_token, receipt_idempotency_key)
-         VALUES (?, ?, ?, 'USD', ?, ?, ?, ?, ?, 'CREATED', '', '', 0, '', '', '')`,
-        row.orderId, row.idempotencyKey, row.value, row.cartHash, row.customId, row.linesJson, row.itemTotal, row.discount
+          (order_id, idempotency_key, value, currency, cart_hash, custom_id, lines_json, item_total, discount, status, capture_id, capture_request_id, capture_started_at, paid_at, receipt_token, receipt_idempotency_key, owner_hash)
+         VALUES (?, ?, ?, 'USD', ?, ?, ?, ?, ?, 'CREATED', '', '', 0, '', '', '', ?)`,
+        row.orderId, row.idempotencyKey, row.value, row.cartHash, row.customId, row.linesJson, row.itemTotal, row.discount, row.ownerHash || ''
       );
     },
     setOrderStatus(orderId, status) {

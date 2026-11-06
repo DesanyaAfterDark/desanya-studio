@@ -120,6 +120,7 @@ const CAPTURE_ID = 'TESTCAPTURE1';
 let paypalOrder = null;
 let capturePosts = 0;
 let createPosts = 0;
+let lastPayPalCreate = null;
 
 function paypalFetch() {
   return async (url, init) => {
@@ -129,6 +130,7 @@ function paypalFetch() {
     if (target.endsWith('/v2/checkout/orders') && init.method === 'POST') {
       createPosts += 1;
       const body = JSON.parse(init.body);
+      lastPayPalCreate = body;
       paypalOrder = {
         id: ORDER_ID,
         status: 'PAYER_ACTION_REQUIRED',
@@ -182,11 +184,26 @@ const createdBody = await createdOk.json();
 expectEqual('create uses catalog 900', { status: createdOk.status, amount: createdBody.amount, currency: createdBody.currency, leaked: createdBody.email || createdBody.access_token || null }, {
   status: 201, amount: '900.00', currency: 'USD', leaked: null
 });
+const owner = createdBody.ownerSecret;
+expectEqual('create returns an owner secret and does not give it to PayPal', {
+  shape: /^[0-9a-f]{64}$/i.test(owner),
+  returnUrl: JSON.stringify(lastPayPalCreate).includes('return_url'),
+  paymentSource: lastPayPalCreate.payment_source || null,
+  ownerField: lastPayPalCreate.ownerSecret || null
+}, { shape: true, returnUrl: false, paymentSource: null, ownerField: null });
 expectEqual('paypal saw payer action required shape', paypalOrder.status, 'PAYER_ACTION_REQUIRED');
+
+const replayDenied = await call(post('/v1/orders', {
+  items: [{ slug: 'website-basic', qty: 1 }]
+}, { 'idempotency-key': IDEM }), state, fetchImpl);
+const replayDeniedBody = await replayDenied.json();
+expectEqual('create replay without the owner secret leaks no order', { status: replayDenied.status, body: replayDeniedBody, creates: createPosts }, {
+  status: 401, body: { error: 'owner_required' }, creates: 1
+});
 
 const replay = await call(post('/v1/orders', {
   items: [{ slug: 'website-basic', qty: 1 }]
-}, { 'idempotency-key': IDEM }), state, fetchImpl);
+}, { 'idempotency-key': IDEM, 'order-owner': owner }), state, fetchImpl);
 expectEqual('idempotent replay does not create again', { status: replay.status, creates: createPosts, orderId: (await replay.json()).orderId }, {
   status: 200, creates: 1, orderId: ORDER_ID
 });
@@ -196,12 +213,20 @@ const conflict = await call(post('/v1/orders', {
 }, { 'idempotency-key': IDEM }), state, fetchImpl);
 expectEqual('same key different cart conflicts', conflict.status, 409);
 
-const unapproved = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': CAP_IDEM }), state, fetchImpl);
+const attacker = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': '12121212-1212-1212-1212-121212121212' }), state, fetchImpl);
+const attackerBody = await attacker.json();
+expectEqual('attacker capture before approval leaks nothing', {
+  status: attacker.status,
+  body: attackerBody,
+  posts: capturePosts
+}, { status: 404, body: { error: 'unknown_order' }, posts: 0 });
+
+const unapproved = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': CAP_IDEM, 'order-owner': owner }), state, fetchImpl);
 expectEqual('unapproved capture is 422-style rejection', unapproved.status, 409);
 expectEqual('unapproved capture did not post capture', capturePosts, 0);
 
 paypalOrder.status = 'APPROVED';
-const captured = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': CAP_IDEM }), state, fetchImpl);
+const captured = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': CAP_IDEM, 'order-owner': owner }), state, fetchImpl);
 const capturedBody = await captured.json();
 expectEqual('mocked completion returns catalog amount', {
   status: captured.status,
@@ -210,7 +235,7 @@ expectEqual('mocked completion returns catalog amount', {
   payer: capturedBody.email || capturedBody.payer || null
 }, { status: 200, amount: '900.00', captureStatus: 'COMPLETED', payer: null });
 
-const again = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': CAP_IDEM }), state, fetchImpl);
+const again = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': CAP_IDEM, 'order-owner': owner }), state, fetchImpl);
 expectEqual('repeat capture does not call PayPal again', { status: again.status, posts: capturePosts }, { status: 200, posts: 1 });
 
 const stranger = await call(post('/v1/orders/OTHERORDER1/capture', {}, { 'idempotency-key': '44444444-4444-4444-4444-444444444444' }), state, fetchImpl);
@@ -219,10 +244,11 @@ expectEqual('unknown order is not captured', stranger.status, 404);
 paypalOrder.purchase_units[0].amount.value = '1.00';
 paypalOrder.status = 'APPROVED';
 const tamperedState = env();
-await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }] }, { 'idempotency-key': '55555555-5555-5555-5555-555555555555' }), tamperedState, fetchImpl);
+const tamperedCreated = await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }] }, { 'idempotency-key': '55555555-5555-5555-5555-555555555555' }), tamperedState, fetchImpl);
+const tamperedOwner = (await tamperedCreated.json()).ownerSecret;
 paypalOrder.purchase_units[0].amount.value = '1.00';
 paypalOrder.status = 'APPROVED';
-const mismatch = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': '66666666-6666-6666-6666-666666666666' }), tamperedState, fetchImpl);
+const mismatch = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': '66666666-6666-6666-6666-666666666666', 'order-owner': tamperedOwner }), tamperedState, fetchImpl);
 expectEqual('tampered amount is not captured', mismatch.status, 409);
 
 const evil = await call(new Request('https://order-api.test/v1/orders', {
@@ -241,9 +267,16 @@ const againBody = await again.json();
 expectEqual('same capture key returns the same receipt token', againBody.receiptToken, capturedBody.receiptToken);
 const otherKey = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': '77777777-7777-7777-7777-777777777777' }), state, fetchImpl);
 const otherBody = await otherKey.json();
-expectEqual('a different capture key does not receive the receipt token', { status: otherKey.status, token: otherBody.receiptToken || null, posts: capturePosts }, {
-  status: 200, token: null, posts: 1
+expectEqual('a different capture key without the owner secret leaks nothing', { status: otherKey.status, body: otherBody, posts: capturePosts }, {
+  status: 404, body: { error: 'unknown_order' }, posts: 1
 });
+const ownerOtherKey = await call(post('/v1/orders/' + ORDER_ID + '/capture', {}, { 'idempotency-key': '77777777-7777-7777-7777-777777777777', 'order-owner': owner }), state, fetchImpl);
+const ownerOtherBody = await ownerOtherKey.json();
+expectEqual('the owner secret, not the idempotency key, returns the receipt token', {
+  status: ownerOtherKey.status,
+  token: ownerOtherBody.receiptToken,
+  posts: capturePosts
+}, { status: 200, token: capturedBody.receiptToken, posts: 1 });
 
 function receiptGet(token, orderId = ORDER_ID, useState = state) {
   return call(new Request('https://order-api.test/v1/orders/' + orderId + '/receipt', {
@@ -349,6 +382,144 @@ expectEqual('public receipt helper drops payer email', publicReceipt({
   status: 'COMPLETED', orderId: ORDER_ID, captureId: CAPTURE_ID, paidAt: '2026-11-05T22:00:00.000Z',
   currency: 'USD', value: '900.00', linesJson: JSON.stringify([{ name: 'Website — Basic', quantity: '1', unitAmount: '900.00', email: 'buyer@example.com' }])
 }).lines[0], { name: 'Website — Basic', quantity: '1', unitAmount: '900.00' });
+const legacyDeposit = publicReceipt({
+  status: 'COMPLETED', orderId: 'LEGACYORD1', captureId: 'LEGACYCAP1', paidAt: '2026-11-05T22:00:00.000Z',
+  currency: 'USD', value: '1.00',
+  linesJson: JSON.stringify([{ name: 'Deposit — Monthly care — Basic', quantity: '1', unitAmount: '1.00' }])
+});
+expectEqual('stored deposit rows do not gain a later monthly amount', {
+  amount: legacyDeposit.amount,
+  later: legacyDeposit.laterRecurring || null,
+  name: legacyDeposit.lines[0].name
+}, { amount: '1.00', later: null, name: 'Deposit — Monthly care — Basic' });
+
+const care = await quoteCart([{ slug: 'monthly-care', qty: 1, price: 5 }], { now: CLOSED });
+const carePlus = await quoteCart([{ slug: 'monthly-care-plus', qty: 1 }], { now: CLOSED });
+const careAgain = await quoteCart([{ slug: 'monthly-care', qty: 1 }], { now: CLOSED });
+expectEqual('monthly deposits share the charge and not the commitment', {
+  care: care.value,
+  plus: carePlus.value,
+  sameHash: care.cartHash === carePlus.cartHash,
+  later: care.laterRecurring,
+  plusLater: carePlus.laterRecurring,
+  replay: careAgain.cartHash === care.cartHash
+}, { care: '1.00', plus: '1.00', sameHash: false, later: '99.00', plusLater: '179.00', replay: true });
+const photo = await quoteCart([{ slug: 'photo-basic', qty: 1 }], { now: CLOSED });
+const deck = await quoteCart([{ slug: 'deck-basic', qty: 1 }], { now: CLOSED });
+expectEqual('unrelated 150 carts do not share a commitment', photo.value === '150.00' && deck.value === '150.00' && photo.cartHash !== deck.cartHash, true);
+
+function scenarioPayPal(orderId, captureId) {
+  let creates = 0;
+  let captures = 0;
+  let order = null;
+  let createBody = null;
+  return {
+    creates: () => creates,
+    captures: () => captures,
+    createBody: () => createBody,
+    approve() { order.status = 'APPROVED'; },
+    fetch: async (url, init) => {
+      const target = String(url);
+      if (target.endsWith('/v1/oauth2/token')) return response({ access_token: 'tok-test', expires_in: 3000 });
+      if (target.endsWith('/v2/checkout/orders') && init.method === 'POST') {
+        creates += 1;
+        createBody = JSON.parse(init.body);
+        order = { id: orderId, status: 'PAYER_ACTION_REQUIRED', intent: 'CAPTURE', purchase_units: createBody.purchase_units };
+        return response({ id: orderId, status: 'PAYER_ACTION_REQUIRED' }, 201);
+      }
+      if (target.endsWith('/v2/checkout/orders/' + orderId) && (!init.method || init.method === 'GET')) return response(order);
+      if (target.endsWith('/capture') && init.method === 'POST') {
+        captures += 1;
+        order = capturedOrder(orderId, order.purchase_units[0].amount.value, order.purchase_units[0].custom_id, captureId);
+        return response(order);
+      }
+      throw new Error('unexpected ' + target);
+    }
+  };
+}
+
+resetPayPalTokenCache();
+const monthlyPay = scenarioPayPal('MONTHLYOR1', 'CAPMONTH01');
+const monthlyState = env();
+const monthlyKey = 'abababab-abab-abab-abab-abababababab';
+const monthlyCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': monthlyKey }), monthlyState, monthlyPay.fetch);
+const monthlyBody = await monthlyCreated.json();
+const monthlyClash = await call(post('/v1/orders', { items: [{ slug: 'monthly-care-plus', qty: 1 }] }, { 'idempotency-key': monthlyKey }), monthlyState, monthlyPay.fetch);
+expectEqual('monthly-care does not replay as monthly-care-plus', { status: monthlyClash.status, creates: monthlyPay.creates(), amount: monthlyBody.amount }, {
+  status: 409, creates: 1, amount: '1.00'
+});
+const monthlyReplay = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': monthlyKey, 'order-owner': monthlyBody.ownerSecret }), monthlyState, monthlyPay.fetch);
+expectEqual('the same monthly cart replays one order', { status: monthlyReplay.status, id: (await monthlyReplay.json()).orderId, creates: monthlyPay.creates() }, {
+  status: 200, id: 'MONTHLYOR1', creates: 1
+});
+const qtyClash = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 2 }] }, { 'idempotency-key': monthlyKey }), monthlyState, monthlyPay.fetch);
+expectEqual('a different monthly quantity is a different commitment', qtyClash.status, 409);
+monthlyPay.approve();
+const monthlyCaptured = await call(post('/v1/orders/MONTHLYOR1/capture', {}, { 'idempotency-key': 'bcbcbcbc-bcbc-bcbc-bcbc-bcbcbcbcbcbc', 'order-owner': monthlyBody.ownerSecret }), monthlyState, monthlyPay.fetch);
+const monthlyCaptureBody = await monthlyCaptured.json();
+const monthlyReceipt = await (await call(new Request('https://order-api.test/v1/orders/MONTHLYOR1/receipt', {
+  method: 'GET',
+  headers: { origin: 'https://desanya.tech', 'receipt-token': monthlyCaptureBody.receiptToken }
+}), monthlyState, monthlyPay.fetch)).json();
+expectEqual('monthly receipt keeps the deposit paid and the later commitment', {
+  paid: monthlyReceipt.amount,
+  later: monthlyReceipt.laterRecurring,
+  deposit: monthlyReceipt.lines[0].unitAmount,
+  service: monthlyReceipt.requested.filter((line) => line.recurring).map((line) => line.name + ' ' + line.catalogUnitAmount)
+}, { paid: '1.00', later: '99.00', deposit: '1.00', service: ['Monthly care — Basic 99.00'] });
+
+resetPayPalTokenCache();
+const mixedPay = scenarioPayPal('MIXEDORD01', 'CAPMIXED01');
+const mixedState = env();
+const mixedKey = 'dededede-dede-dede-dede-dededededede';
+const mixedCreated = await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }, { slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': mixedKey }), mixedState, mixedPay.fetch);
+const mixedBody = await mixedCreated.json();
+expectEqual('mixed create charges the website and not the monthly', { status: mixedCreated.status, amount: mixedBody.amount, paypal: mixedPay.createBody().purchase_units[0].amount.value }, {
+  status: 201, amount: '900.00', paypal: '900.00'
+});
+mixedPay.approve();
+const mixedCaptured = await call(post('/v1/orders/MIXEDORD01/capture', {}, { 'idempotency-key': 'efefefef-efef-efef-efef-efefefefefef', 'order-owner': mixedBody.ownerSecret }), mixedState, mixedPay.fetch);
+const mixedToken = (await mixedCaptured.json()).receiptToken;
+const mixedReceipt = await (await call(new Request('https://order-api.test/v1/orders/MIXEDORD01/receipt', {
+  method: 'GET',
+  headers: { origin: 'https://desanya.tech', 'receipt-token': mixedToken }
+}), mixedState, mixedPay.fetch)).json();
+expectEqual('mixed receipt shows 900 paid and 99 later', {
+  paid: mixedReceipt.amount,
+  paidLine: mixedReceipt.lines.map((line) => line.name + ' ' + line.unitAmount),
+  later: mixedReceipt.laterRecurring,
+  monthly: mixedReceipt.requested.filter((line) => line.recurring).map((line) => line.catalogUnitAmount)
+}, { paid: '900.00', paidLine: ['Website — Basic 900.00'], later: '99.00', monthly: ['99.00'] });
+
+resetPayPalTokenCache();
+const pricePay = scenarioPayPal('SAMEPRICE1', 'CAPSAME001');
+const priceState = env();
+const priceKey = '12121212-3434-5656-7878-909090909090';
+const photoCreated = await call(post('/v1/orders', { items: [{ slug: 'photo-basic', qty: 1 }] }, { 'idempotency-key': priceKey }), priceState, pricePay.fetch);
+const photoBody = await photoCreated.json();
+const deckClash = await call(post('/v1/orders', { items: [{ slug: 'deck-basic', qty: 1 }] }, { 'idempotency-key': priceKey }), priceState, pricePay.fetch);
+expectEqual('same price does not replay an unrelated cart', { status: deckClash.status, amount: photoBody.amount, creates: pricePay.creates() }, {
+  status: 409, amount: '150.00', creates: 1
+});
+
+let clientHeaders = null;
+let clientBody = '';
+const clientOrder = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'website-basic', qty: 1 }],
+  idempotencyKey: '34343434-3434-3434-3434-343434343434',
+  ownerSecret: 'ab'.repeat(32),
+  fetchImpl: async (url, init) => {
+    clientHeaders = init.headers;
+    clientBody = init.body;
+    return new Response(JSON.stringify({ orderId: 'CLIENTORD1', amount: '900.00', currency: 'USD', ownerSecret: 'cd'.repeat(32) }), { status: 201 });
+  }
+});
+expectEqual('client sends the owner secret as a header, not in the body or address', {
+  header: clientHeaders['order-owner'],
+  bodyHasSecret: clientBody.includes('ab'.repeat(32)),
+  urlHasSecret: false,
+  returned: clientOrder.ownerSecret
+}, { header: 'ab'.repeat(32), bodyHasSecret: false, urlHasSecret: false, returned: 'cd'.repeat(32) });
 
 const workerSource = readFileSync(new URL('../worker/src/handler.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../worker/src/ledger.js', import.meta.url), 'utf8')

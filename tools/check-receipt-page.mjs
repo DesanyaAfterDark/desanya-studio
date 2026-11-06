@@ -78,6 +78,27 @@ const failed = viewReceipt({
   serverError: true
 });
 expectEqual('a failed receipt fetch has no amount', failed, { state: 'error' });
+const mixedModel = viewReceipt({
+  apiConfigured: true,
+  lookup: { orderId: 'MIXEDORD01', token },
+  serverBody: {
+    ...server,
+    orderId: 'MIXEDORD01',
+    captureId: 'CAPMIXED01',
+    amount: '900.00',
+    lines: [{ name: 'Website — Basic', quantity: '1', unitAmount: '900.00' }],
+    laterRecurring: '99.00',
+    requested: [
+      { slug: 'monthly-care', name: 'Monthly care — Basic', quantity: '1', catalogUnitAmount: '99.00', recurring: true },
+      { slug: 'website-basic', name: 'Website — Basic', quantity: '1', catalogUnitAmount: '900.00', recurring: false }
+    ]
+  },
+  serverError: false
+});
+expectEqual('later monthly is not added to the amount paid', {
+  amount: mixedModel.receipt && mixedModel.receipt.amount,
+  later: mixedModel.receipt && mixedModel.receipt.laterRecurring
+}, { amount: '900.00', later: '99.00' });
 
 function node(id) {
   return {

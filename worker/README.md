@@ -34,6 +34,24 @@ PayPal’s own payment notification is a different message. Orders v2 create and
 
 The receipt link is a secret. Anyone who has the token can open that one receipt. The order id by itself is not enough.
 
+The amount paid is the PayPal capture. A monthly service is not part of that capture. Its catalog price is stored with the requested cart and shown as billed later. A monthly-only cart still pays the $1 deposit today. Two different monthly services are different commitments even though both deposits are $1.00. The cart hash includes the requested slugs, quantities, and catalog unit prices. It does not read a price sent by the browser.
+
+Create returns a random owner secret once. Only its SHA-256 is stored. Capture and a create replay must send that secret in the `order-owner` header. A caller who knows the order id and invents a capture idempotency key is rejected and receives no amount, capture id, or receipt token. The idempotency key is not ownership. The secret is not put in the page address, the PayPal order, or a log line from this worker. Orders created before this binding have no stored hash. Their older capture behavior is not ownership security, and this code does not invent secrets for them.
+
+PayPal JavaScript checkout uses `createOrder` and `onApprove`. It does not need `return_url` or `cancel_url`. Those fields are required only inside `payment_source.paypal.experience_context`, which is the redirect approval flow. This worker does not send that object. A standalone approval URL that stays on “Loading…” after Review Order has no SDK callback and no return URL; that observation is not proof the button flow failed, and it is not a reason to add an open redirect.
+
+## Sandbox baseline at b5994f9
+
+These three captures were reported from the isolated sandbox worker built from `b5994f9`, before the commitment and owner-secret changes. They are baseline evidence. They are not a test of the revision that adds the later-billing section and the owner secret. No payer email and no capability token is recorded here.
+
+| Cart | Order | Capture | Result |
+| --- | --- | --- | --- |
+| Blog, USD 120.00 | 25N769370G6783016 | 25K87359FD454380K | COMPLETED. The first capture and a replay with the same key returned the same capture. |
+| Monthly care deposit, USD 1.00 | 15Y25252071631202 | 1ND85724G7049235W | COMPLETED. The stored paid line is the deposit label for Monthly care — Basic. The future USD 99.00 catalog price was not stored. |
+| Website Basic plus monthly care, USD 900.00 | 2PY93873143038723 | 1NL607579C837290D | COMPLETED. PayPal and the paid lines show Website — Basic at USD 900.00. The monthly USD 99.00 is billed later and was not in the paid lines. |
+
+On that baseline, a different idempotency key after completion still returned capture metadata and did not return the receipt token. A receipt read with the token returned 200. A missing or wrong token returned 404. That metadata response was not an ownership check. The stored rows are left as captured. They are not rewritten.
+
 ## Official sources checked 5 November 2026
 
 - PayPal Create order: https://developer.paypal.com/api/orders/v2/orders-create

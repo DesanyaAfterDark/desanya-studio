@@ -5,7 +5,7 @@
  * A receipt token is returned only to the capture request that owns it.
  * This worker does not send email.
  */
-import { quoteCart } from '../../shared/price-order.js';
+import { quoteCart, sha256Hex } from '../../shared/price-order.js';
 import { publicReceipt } from './ledger.js';
 
 const PAYPAL_BASES = new Set([
@@ -160,7 +160,7 @@ function completedCapture(order, expectedValue) {
   return { captureId: String(capture.id) };
 }
 
-function publicCapture(record, request) {
+function publicCapture(record, includeToken) {
   const body = {
     orderId: record.orderId,
     captureId: record.captureId,
@@ -168,19 +168,40 @@ function publicCapture(record, request) {
     currency: 'USD',
     amount: record.value
   };
-  const key = request.headers.get('idempotency-key') || '';
-  if (record.receiptToken && record.receiptIdempotencyKey && safeEqual(key, record.receiptIdempotencyKey)) {
-    body.receiptToken = record.receiptToken;
-  }
+  if (includeToken && record.receiptToken) body.receiptToken = record.receiptToken;
   return body;
 }
 
+function legacyToken(record, request) {
+  if (record.ownerHash) return false;
+  const key = request.headers.get('idempotency-key') || '';
+  return !!(record.receiptToken && record.receiptIdempotencyKey && safeEqual(key, record.receiptIdempotencyKey));
+}
+
+function newOwnerSecret() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function ownerMatches(request, ownerHash) {
+  if (!ownerHash) return false;
+  const presented = request.headers.get('order-owner') || '';
+  if (!/^[0-9a-f]{64}$/i.test(presented)) return false;
+  return safeEqual(await sha256Hex(presented), ownerHash);
+}
+
 function quoteLines(quote) {
-  return JSON.stringify(quote.items.map((item) => ({
-    name: item.name,
-    quantity: item.quantity,
-    unitAmount: item.unitAmount
-  })));
+  return JSON.stringify({
+    version: 2,
+    paid: quote.items.map((item) => ({
+      name: item.name,
+      quantity: item.quantity,
+      unitAmount: item.unitAmount
+    })),
+    requested: quote.requested,
+    laterRecurring: quote.laterRecurring
+  });
 }
 
 async function createOrder(request, env, fetchImpl, origin, ledger, now) {
@@ -208,9 +229,26 @@ async function createOrder(request, env, fetchImpl, origin, ledger, now) {
     return json(503, { error: 'storage_unavailable' }, origin);
   }
   if (gate.action === 'conflict') return json(409, { error: 'idempotency_conflict' }, origin);
-  if (gate.action === 'replay') return json(200, { orderId: gate.orderId, amount: gate.value, currency: 'USD' }, origin);
   if (gate.action === 'in_progress') return json(409, { error: 'order_in_progress' }, origin);
+  if (gate.action === 'replay') {
+    if (!await ownerMatches(request, gate.ownerHash)) return json(401, { error: 'owner_required' }, origin);
+    return json(200, { orderId: gate.orderId, amount: gate.value, currency: 'USD' }, origin);
+  }
 
+  let ownerSecret = '';
+  if (!gate.ownerHash) {
+    ownerSecret = newOwnerSecret();
+    let claimed = false;
+    try { claimed = ledger.claimOwner(idempotencyKey, await sha256Hex(ownerSecret), now()); } catch { claimed = false; }
+    if (!claimed) return json(409, { error: 'order_in_progress' }, origin);
+  } else if (!await ownerMatches(request, gate.ownerHash)) {
+    return json(401, { error: 'owner_required' }, origin);
+  }
+
+  // JS SDK createOrder/onApprove does not use a merchant return URL.
+  // return_url and cancel_url belong to payment_source.paypal.experience_context
+  // for a redirect approval. They are omitted here so the body cannot be an open redirect.
+  // The owner secret is not placed in this payload.
   const paypalBody = {
     intent: 'CAPTURE',
     purchase_units: [{
@@ -253,7 +291,9 @@ async function createOrder(request, env, fetchImpl, origin, ledger, now) {
     ledger.markRetryable(idempotencyKey);
     return json(502, { error: 'order_not_stored' }, origin);
   }
-  return json(201, { orderId: String(created.body.id), amount: quote.value, currency: 'USD' }, origin);
+  const createdBody = { orderId: String(created.body.id), amount: quote.value, currency: 'USD' };
+  if (ownerSecret) createdBody.ownerSecret = ownerSecret;
+  return json(201, createdBody, origin);
 }
 
 async function finishCompleted(ledger, request, origin, record, captureId, now) {
@@ -267,7 +307,7 @@ async function finishCompleted(ledger, request, origin, record, captureId, now) 
     ledger.markCaptureRetryable(record.orderId);
     return json(502, { error: 'capture_not_stored' }, origin);
   }
-  return json(200, publicCapture(saved, request), origin);
+  return json(200, publicCapture(saved, !!saved.ownerHash || legacyToken(saved, request)), origin);
 }
 
 async function captureOrder(request, env, fetchImpl, origin, ledger, now, orderId) {
@@ -277,10 +317,15 @@ async function captureOrder(request, env, fetchImpl, origin, ledger, now, orderI
   let record;
   try { record = ledger.getOrder(orderId); } catch { return json(503, { error: 'storage_unavailable' }, origin); }
   if (!record) return json(404, { error: 'unknown_order' }, origin);
+  if (record.ownerHash && !await ownerMatches(request, record.ownerHash)) {
+    return json(404, { error: 'unknown_order' }, origin);
+  }
   if (record.value == null || record.currency !== 'USD' || !record.customId || !record.cartHash) {
     return json(409, { error: 'order_binding' }, origin);
   }
-  if (record.status === 'COMPLETED' && record.captureId) return json(200, publicCapture(record, request), origin);
+  if (record.status === 'COMPLETED' && record.captureId) {
+    return json(200, publicCapture(record, !!record.ownerHash || legacyToken(record, request)), origin);
+  }
 
   let shown;
   try {
@@ -306,7 +351,9 @@ async function captureOrder(request, env, fetchImpl, origin, ledger, now, orderI
   let claim;
   try { claim = ledger.claimCapture(orderId, now()); } catch { return json(503, { error: 'storage_unavailable' }, origin); }
   if (claim.action === 'unknown') return json(404, { error: 'unknown_order' }, origin);
-  if (claim.action === 'completed') return json(200, publicCapture(claim.record, request), origin);
+  if (claim.action === 'completed') {
+    return json(200, publicCapture(claim.record, !!claim.record.ownerHash || legacyToken(claim.record, request)), origin);
+  }
   if (claim.action === 'in_progress') return json(409, { error: 'capture_in_progress' }, origin);
 
   let captured;
@@ -363,7 +410,7 @@ export async function handleRequest(request, env, deps = {}) {
       headers: {
         'access-control-allow-origin': origin,
         'access-control-allow-methods': 'GET, POST, OPTIONS',
-        'access-control-allow-headers': 'content-type, idempotency-key, receipt-token',
+        'access-control-allow-headers': 'content-type, idempotency-key, receipt-token, order-owner',
         'access-control-max-age': '600',
         vary: 'Origin',
         'cache-control': 'no-store'
