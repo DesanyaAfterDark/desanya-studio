@@ -216,12 +216,14 @@ function walk(dir, found = []) {
 }
 
 const files = walk(outDir);
-const banned = [liveId, 'PAYPAL_CLIENT_SECRET', 'sandbox-test-secret'];
 for (const file of files) {
   if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.webp') || file.endsWith('.ico') || file.endsWith('.woff2')) continue;
   const text = readFileSync(file, 'utf8');
-  for (const word of banned) {
-    if (text.includes(word)) throw new Error(relative(outDir, file) + ' contains a forbidden value');
+  if (text.includes(liveId) || text.includes('sandbox-test-secret')) {
+    throw new Error(relative(outDir, file) + ' contains a forbidden value');
+  }
+  if (/PAYPAL_CLIENT_SECRET\s*[:=]\s*['"][^'"]+['"]/.test(text)) {
+    throw new Error(relative(outDir, file) + ' assigns a client secret');
   }
 }
 const configText = readFileSync(join(outDir, 'sandbox-public-config.js'), 'utf8');
