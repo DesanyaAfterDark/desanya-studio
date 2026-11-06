@@ -77,6 +77,39 @@ function rememberedOwner(orderId) {
   }
 }
 
+function rememberIdemOwner(idempotencyKey, secret) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || '')) || !/^[0-9a-f]{64}$/i.test(String(secret || ''))) return;
+  if (typeof sessionStorage === 'undefined') return;
+  try { sessionStorage.setItem('desanya_owner_idem_' + idempotencyKey, secret); } catch { /* private mode */ }
+}
+
+function rememberedIdemOwner(idempotencyKey) {
+  if (typeof sessionStorage === 'undefined') return '';
+  try {
+    const secret = sessionStorage.getItem('desanya_owner_idem_' + idempotencyKey) || '';
+    return /^[0-9a-f]{64}$/i.test(secret) ? secret : '';
+  } catch {
+    return '';
+  }
+}
+
+function storedOrderOwners() {
+  if (typeof sessionStorage === 'undefined' || typeof sessionStorage.length !== 'number') return [];
+  const found = [];
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i) || '';
+      if (!key.startsWith('desanya_owner_') || key.startsWith('desanya_owner_idem_')) continue;
+      const secret = sessionStorage.getItem(key) || '';
+      if (/^[0-9a-f]{64}$/i.test(secret) && !found.includes(secret)) found.push(secret);
+      if (found.length >= 20) break;
+    }
+  } catch {
+    return [];
+  }
+  return found;
+}
+
 async function postJson(url, idempotencyKey, body, fetchImpl, extraHeaders) {
   const response = await fetchImpl(url, {
     method: 'POST',
@@ -108,10 +141,48 @@ export async function createServerOrder(baseUrl, { items, discountCode, idempote
   if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || ''))) throw new Error('order_api_idempotency');
   const payload = { items };
   if (discountCode) payload.discountCode = discountCode;
-  const parsed = await postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(ownerSecret));
+  const exact = ownerSecret || rememberedIdemOwner(idempotencyKey);
+  const post = (secret) => postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(secret));
+  const tryOwners = async (err) => {
+    for (const candidate of storedOrderOwners()) {
+      if (candidate === exact) continue;
+      try {
+        return { parsed: await post(candidate), used: candidate };
+      } catch (retryErr) {
+        if (retryErr.status !== 401) throw retryErr;
+      }
+    }
+    throw err;
+  };
+  let parsed;
+  let used = exact;
+  if (exact) {
+    try {
+      parsed = await post(exact);
+    } catch (err) {
+      if (err.status !== 401) throw err;
+      const recovered = await tryOwners(err);
+      parsed = recovered.parsed;
+      used = recovered.used;
+    }
+  } else {
+    try {
+      parsed = await post('');
+      used = '';
+    } catch (err) {
+      if (err.status !== 401) throw err;
+      const recovered = await tryOwners(err);
+      parsed = recovered.parsed;
+      used = recovered.used;
+    }
+  }
   const order = readServerOrder(parsed);
   if (!order) throw new Error('order_api_bad_response');
-  if (order.ownerSecret) rememberOwner(order.orderId, order.ownerSecret);
+  const secret = order.ownerSecret || used;
+  if (secret) {
+    rememberOwner(order.orderId, secret);
+    rememberIdemOwner(idempotencyKey, secret);
+  }
   return order;
 }
 

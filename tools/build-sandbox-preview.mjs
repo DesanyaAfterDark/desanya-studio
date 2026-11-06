@@ -128,8 +128,8 @@ writeFileSync(join(outDir, 'checkout.html'), checkout);
 let receipt = stripTrackers(readFileSync(join(root, 'receipt/index.html'), 'utf8'));
 if (!receipt.includes("var api = '';")) throw new Error('receipt api constant was not found');
 receipt = receipt.replace(
-  '<script type="module" src="/shared/receipt-view.js"></script>',
-  '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js"></script>'
+  '<script type="module" src="/shared/receipt-view.js?v=3"></script>',
+  '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js?v=3"></script>'
 );
 receipt = receipt.replace(
   `    var api = '';
@@ -207,6 +207,8 @@ This preview was packed from git ${commit}. It does not deploy the worker.
 4. \`orderApi\` is already \`https://desanya-order-api-sandbox.desanya-studio.workers.dev\`.
 
 The checkout page reads that file in the browser. While \`paypalClientId\` is empty, the page says NOT READY and does not load the PayPal script.
+
+A new cart create does not send an owner secret. The worker returns one once. A later create for a cart this worker already accepted sends the secret stored for that cart, or tries the owner secrets already saved in this browser after a 401. The idempotency key is not replaced. If none of those secrets match, the result stays 401 and no second PayPal order is started.
 
 ## Worker settings this browser needs
 

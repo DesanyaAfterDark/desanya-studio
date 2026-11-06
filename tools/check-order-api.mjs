@@ -521,6 +521,111 @@ expectEqual('client sends the owner secret as a header, not in the body or addre
   returned: clientOrder.ownerSecret
 }, { header: 'ab'.repeat(32), bodyHasSecret: false, urlHasSecret: false, returned: 'cd'.repeat(32) });
 
+function memorySession() {
+  const map = new Map();
+  return {
+    get length() { return map.size; },
+    key(index) { return [...map.keys()][index] || null; },
+    setItem(key, value) { map.set(String(key), String(value)); },
+    getItem(key) { return map.has(String(key)) ? map.get(String(key)) : null; }
+  };
+}
+const savedSession = globalThis.sessionStorage;
+const blogKey = '46464646-4646-4646-4646-464646464646';
+const blogPay = scenarioPayPal('BLOGORD120', 'CAPBLOG120');
+const blogState = env();
+const blogHeaders = [];
+const blogKeys = [];
+globalThis.sessionStorage = memorySession();
+resetPayPalTokenCache();
+const blogFetch = async (url, init) => {
+  blogHeaders.push(init.headers['order-owner'] || '');
+  blogKeys.push(init.headers['idempotency-key'] || '');
+  return call(new Request('https://order-api.test/v1/orders', {
+    method: 'POST',
+    headers: { origin: 'https://desanya.tech', 'content-type': 'application/json', 'idempotency-key': blogKey, ...(init.headers['order-owner'] ? { 'order-owner': init.headers['order-owner'] } : {}) },
+    body: init.body
+  }), blogState, blogPay.fetch);
+};
+const blogFirst = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+const blogReplay = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('stored owner secret is sent on the next create and does not create again', {
+  amount: blogFirst.amount,
+  replay: blogReplay.orderId,
+  creates: blogPay.creates(),
+  firstHeader: blogHeaders[0],
+  secondHeader: blogHeaders[1] === blogFirst.ownerSecret
+}, { amount: '120.00', replay: 'BLOGORD120', creates: 1, firstHeader: '', secondHeader: true });
+sessionStorage.setItem('desanya_owner_idem_' + blogKey, 'aa'.repeat(32));
+const blogExact = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('exact remembered owner 401 then stored order secret replays', {
+  id: blogExact.orderId,
+  creates: blogPay.creates()
+}, { id: 'BLOGORD120', creates: 1 });
+const orphan = memorySession();
+orphan.setItem('desanya_owner_BLOGORD120', blogFirst.ownerSecret);
+globalThis.sessionStorage = orphan;
+const blogRecovered = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('one saved order secret can resume the same cart without a second PayPal order', {
+  id: blogRecovered.orderId,
+  creates: blogPay.creates()
+}, { id: 'BLOGORD120', creates: 1 });
+globalThis.sessionStorage = memorySession();
+let blogDenied = 0;
+try {
+  await createServerOrder('https://orders.example.com', {
+    items: [{ slug: 'blog-basic', qty: 1 }],
+    idempotencyKey: blogKey,
+    fetchImpl: blogFetch
+  });
+} catch (err) {
+  blogDenied = err.status;
+}
+expectEqual('a repeated create without the owner secret stays 401 and does not create again', {
+  status: blogDenied,
+  creates: blogPay.creates(),
+  sameKey: blogKeys.every((key) => key === blogKey)
+}, { status: 401, creates: 1, sameKey: true });
+const several = memorySession();
+several.setItem('desanya_owner_OTHERORD1', 'ff'.repeat(32));
+several.setItem('desanya_owner_BLOGORD120', blogFirst.ownerSecret);
+several.setItem('desanya_idem_blog-basic:1|', blogKey);
+globalThis.sessionStorage = several;
+const blogReturn = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('a return visit tries saved order proofs and does not create another order', {
+  id: blogReturn.orderId,
+  creates: blogPay.creates(),
+  sameKey: blogKeys.every((key) => key === blogKey)
+}, { id: 'BLOGORD120', creates: 1, sameKey: true });
+globalThis.sessionStorage = savedSession;
+
+const checkoutSource = readFileSync(new URL('../checkout.html', import.meta.url), 'utf8');
+const createSlice = checkoutSource.slice(checkoutSource.indexOf('createOrder: function'), checkoutSource.indexOf('onApprove: function'));
+const serverCaptureSlice = checkoutSource.slice(checkoutSource.indexOf("if (mode.mode === 'server')", checkoutSource.indexOf('onApprove: function')), checkoutSource.indexOf('return actions.order.capture()'));
+expectEqual('checkout rotates the cart key once after owner recovery is exhausted', createSlice.includes('err.status !== 401') && createSlice.includes('rotateOrderIdempotencyKey(cartForApi)'), true);
+expectEqual('checkout treats a stored capture marker as an already captured order', createSlice.includes("sessionStorage.getItem('desanya_captured_' + created.orderId) === '1'") && createSlice.includes('desanya_last_order'), true);
+expectEqual('checkout records each successful server capture', serverCaptureSlice.includes("sessionStorage.setItem('desanya_captured_' + capture.orderId, '1')"), true);
+expectEqual('checkout forgets the cart key before clearing after capture', serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') >= 0 && serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') < serverCaptureSlice.indexOf('window.DesanyaCart.clear()'), true);
 const workerSource = readFileSync(new URL('../worker/src/handler.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../worker/src/ledger.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../shared/receipt-view.js', import.meta.url), 'utf8');
