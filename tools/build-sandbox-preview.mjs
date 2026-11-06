@@ -235,8 +235,11 @@ if (!client.includes('order-owner') || !client.includes('desanya_owner_')) {
   throw new Error('owner header plumbing missing');
 }
 
-rmSync(zipPath, { force: true });
-execFileSync('zip', ['-r', '-X', zipPath, '.'], { cwd: outDir });
+const tmpZip = '/tmp/desanya-sandbox-preview-pack.zip';
+rmSync(tmpZip, { force: true });
+execFileSync('zip', ['-r', '-X', tmpZip, '.'], { cwd: outDir });
+mkdirSync(dirname(zipPath), { recursive: true });
+cpSync(tmpZip, zipPath);
 const zipHash = createHash('sha256').update(readFileSync(zipPath)).digest('hex');
 writeFileSync(zipPath + '.sha256', zipHash + '  ' + zipPath.split('/').pop() + '\n');
 console.log('preview files', files.length);
