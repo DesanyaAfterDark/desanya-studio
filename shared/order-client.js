@@ -77,6 +77,38 @@ function rememberedOwner(orderId) {
   }
 }
 
+function rememberIdemOwner(idempotencyKey, secret) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || '')) || !/^[0-9a-f]{64}$/i.test(String(secret || ''))) return;
+  if (typeof sessionStorage === 'undefined') return;
+  try { sessionStorage.setItem('desanya_owner_idem_' + idempotencyKey, secret); } catch { /* private mode */ }
+}
+
+function rememberedIdemOwner(idempotencyKey) {
+  if (typeof sessionStorage === 'undefined') return '';
+  try {
+    const secret = sessionStorage.getItem('desanya_owner_idem_' + idempotencyKey) || '';
+    return /^[0-9a-f]{64}$/i.test(secret) ? secret : '';
+  } catch {
+    return '';
+  }
+}
+
+function soleStoredOwner() {
+  if (typeof sessionStorage === 'undefined' || typeof sessionStorage.length !== 'number') return '';
+  const found = [];
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i) || '';
+      if (!key.startsWith('desanya_owner_') || key.startsWith('desanya_owner_idem_')) continue;
+      const secret = sessionStorage.getItem(key) || '';
+      if (/^[0-9a-f]{64}$/i.test(secret)) found.push(secret);
+    }
+  } catch {
+    return '';
+  }
+  return found.length === 1 ? found[0] : '';
+}
+
 async function postJson(url, idempotencyKey, body, fetchImpl, extraHeaders) {
   const response = await fetchImpl(url, {
     method: 'POST',
@@ -108,10 +140,15 @@ export async function createServerOrder(baseUrl, { items, discountCode, idempote
   if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || ''))) throw new Error('order_api_idempotency');
   const payload = { items };
   if (discountCode) payload.discountCode = discountCode;
-  const parsed = await postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(ownerSecret));
+  const knownOwner = ownerSecret || rememberedIdemOwner(idempotencyKey) || soleStoredOwner();
+  const parsed = await postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(knownOwner));
   const order = readServerOrder(parsed);
   if (!order) throw new Error('order_api_bad_response');
-  if (order.ownerSecret) rememberOwner(order.orderId, order.ownerSecret);
+  const secret = order.ownerSecret || knownOwner;
+  if (secret) {
+    rememberOwner(order.orderId, secret);
+    rememberIdemOwner(idempotencyKey, secret);
+  }
   return order;
 }
 

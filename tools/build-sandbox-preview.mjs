@@ -208,6 +208,8 @@ This preview was packed from git ${commit}. It does not deploy the worker.
 
 The checkout page reads that file in the browser. While \`paypalClientId\` is empty, the page says NOT READY and does not load the PayPal script.
 
+A repeated click for the same cart sends the owner secret this browser stored. If that proof is gone, the worker returns 401 and does not start a second PayPal order. That 401 is not an origin rejection and it is not the binding secret.
+
 ## Worker settings this browser needs
 
 On the isolated sandbox worker, not the live site:
