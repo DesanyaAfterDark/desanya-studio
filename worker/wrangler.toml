@@ -1,17 +1,22 @@
 # Not deployed. Do not run wrangler deploy from this repository state.
-# Owner approval, a free Cloudflare account, a KV namespace, and PayPal
-# secrets are still required. See worker/README.md.
+# SQLite Durable Object only. Workers KV is not the order store.
+# Do not enable Workers Paid. See worker/README.md.
 name = "desanya-order-api"
 main = "src/index.js"
 compatibility_date = "2026-11-05"
 workers_dev = true
 
-# Create the namespace only after the Cloudflare account is approved.
-# [[kv_namespaces]]
-# binding = "ORDERS"
-# id = "REPLACE_AFTER_THE_NAMESPACE_EXISTS"
+[durable_objects]
+bindings = [
+  { name = "ORDER_LEDGER", class_name = "OrderLedger" }
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["OrderLedger"]
 
 [vars]
-# Set these in the Cloudflare dashboard for the worker, not in git.
+# Set these in the Cloudflare dashboard for a sandbox preview, not in git.
 # PAYPAL_API_BASE = "https://api-m.sandbox.paypal.com"
-# ALLOWED_ORIGINS = "https://desanya.tech,https://www.desanya.tech"
+# ALLOWED_ORIGINS must be a preview origin until a later cutover.
+# ALLOWED_ORIGINS = "https://preview.example"

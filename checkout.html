@@ -1073,6 +1073,7 @@
     var PAYPAL_ORDER_API = '';
   </script>
   <script type="module" src="shared/order-client.js"></script>
+  <script type="module" src="shared/receipt-view.js"></script>
   <script>
     (function () {
       var mode = (typeof PAYPAL_MODE !== 'undefined' && PAYPAL_MODE === 'live') ? 'live' : 'sandbox';
@@ -1394,7 +1395,14 @@
                   return;
                 }
                 window.DesanyaCart.clear();
-                window.location.href = 'thanks/#receipt';
+                var receiptHref = window.DesanyaReceipt && capture.receiptToken
+                  ? window.DesanyaReceipt.receiptPageHref(capture.orderId, capture.receiptToken)
+                  : '';
+                if (!receiptHref) {
+                  showOrderError('Payment was confirmed, but this page did not receive a server receipt link. Do not pay again. Check PayPal, or email desanyaafterdark@gmail.com.');
+                  return;
+                }
+                window.location.href = receiptHref;
               }).catch(function () {
                 showOrderError('The order service did not confirm a completed USD payment. Your cart is still here. This page will not report a browser-priced success.');
               });
