@@ -48,7 +48,10 @@ export function readServerCapture(body, expectedAmount) {
   if (!/^[A-Z0-9]+$/.test(orderId) || !/^[A-Z0-9]+$/.test(captureId)) return null;
   if (currency !== 'USD' || !/^\d+\.\d{2}$/.test(amount) || Number(amount) <= 0) return null;
   if (expectedAmount && amount !== expectedAmount) return null;
-  return { orderId, captureId, status: 'COMPLETED', currency, amount };
+  const receiptToken = typeof record.receiptToken === 'string' && /^[0-9a-f]{64}$/i.test(record.receiptToken)
+    ? record.receiptToken
+    : '';
+  return { orderId, captureId, status: 'COMPLETED', currency, amount, receiptToken };
 }
 
 async function postJson(url, idempotencyKey, body, fetchImpl) {

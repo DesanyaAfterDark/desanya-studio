@@ -29,6 +29,7 @@ PAGES = {
     "blog/meet-our-spooky-ai-crew/index.html": ("blog", True),
     "404.html": ("", True),
     "thanks/index.html": ("", True),
+    "receipt/index.html": ("", True),
     "checkout.html": ("", False),
     "payment-terms.html": ("payment", False),
     "privacy.html": ("privacy", False),
