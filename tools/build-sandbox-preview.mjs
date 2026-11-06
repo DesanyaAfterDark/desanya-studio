@@ -128,8 +128,8 @@ writeFileSync(join(outDir, 'checkout.html'), checkout);
 let receipt = stripTrackers(readFileSync(join(root, 'receipt/index.html'), 'utf8'));
 if (!receipt.includes("var api = '';")) throw new Error('receipt api constant was not found');
 receipt = receipt.replace(
-  '<script type="module" src="/shared/receipt-view.js?v=2"></script>',
-  '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js?v=2"></script>'
+  '<script type="module" src="/shared/receipt-view.js?v=3"></script>',
+  '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js?v=3"></script>'
 );
 receipt = receipt.replace(
   `    var api = '';

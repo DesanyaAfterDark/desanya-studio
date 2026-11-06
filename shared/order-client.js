@@ -143,27 +143,37 @@ export async function createServerOrder(baseUrl, { items, discountCode, idempote
   if (discountCode) payload.discountCode = discountCode;
   const exact = ownerSecret || rememberedIdemOwner(idempotencyKey);
   const post = (secret) => postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(secret));
+  const tryOwners = async (err) => {
+    for (const candidate of storedOrderOwners()) {
+      if (candidate === exact) continue;
+      try {
+        return { parsed: await post(candidate), used: candidate };
+      } catch (retryErr) {
+        if (retryErr.status !== 401) throw retryErr;
+      }
+    }
+    throw err;
+  };
   let parsed;
   let used = exact;
   if (exact) {
-    parsed = await post(exact);
+    try {
+      parsed = await post(exact);
+    } catch (err) {
+      if (err.status !== 401) throw err;
+      const recovered = await tryOwners(err);
+      parsed = recovered.parsed;
+      used = recovered.used;
+    }
   } else {
     try {
       parsed = await post('');
       used = '';
     } catch (err) {
       if (err.status !== 401) throw err;
-      parsed = null;
-      for (const candidate of storedOrderOwners()) {
-        try {
-          parsed = await post(candidate);
-          used = candidate;
-          break;
-        } catch (retryErr) {
-          if (retryErr.status !== 401) throw retryErr;
-        }
-      }
-      if (!parsed) throw err;
+      const recovered = await tryOwners(err);
+      parsed = recovered.parsed;
+      used = recovered.used;
     }
   }
   const order = readServerOrder(parsed);

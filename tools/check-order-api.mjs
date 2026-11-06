@@ -564,6 +564,16 @@ expectEqual('stored owner secret is sent on the next create and does not create 
   firstHeader: blogHeaders[0],
   secondHeader: blogHeaders[1] === blogFirst.ownerSecret
 }, { amount: '120.00', replay: 'BLOGORD120', creates: 1, firstHeader: '', secondHeader: true });
+sessionStorage.setItem('desanya_owner_idem_' + blogKey, 'aa'.repeat(32));
+const blogExact = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('exact remembered owner 401 then stored order secret replays', {
+  id: blogExact.orderId,
+  creates: blogPay.creates()
+}, { id: 'BLOGORD120', creates: 1 });
 const orphan = memorySession();
 orphan.setItem('desanya_owner_BLOGORD120', blogFirst.ownerSecret);
 globalThis.sessionStorage = orphan;
@@ -609,6 +619,11 @@ expectEqual('a return visit tries saved order proofs and does not create another
 }, { id: 'BLOGORD120', creates: 1, sameKey: true });
 globalThis.sessionStorage = savedSession;
 
+const checkoutSource = readFileSync(new URL('../checkout.html', import.meta.url), 'utf8');
+const createSlice = checkoutSource.slice(checkoutSource.indexOf('createOrder: function'), checkoutSource.indexOf('onApprove: function'));
+const serverCaptureSlice = checkoutSource.slice(checkoutSource.indexOf("if (mode.mode === 'server')", checkoutSource.indexOf('onApprove: function')), checkoutSource.indexOf('return actions.order.capture()'));
+expectEqual('checkout rotates the cart key once after owner recovery is exhausted', createSlice.includes('err.status !== 401') && createSlice.includes('rotateOrderIdempotencyKey(cartForApi)'), true);
+expectEqual('checkout forgets the cart key before clearing after capture', serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') >= 0 && serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') < serverCaptureSlice.indexOf('window.DesanyaCart.clear()'), true);
 const workerSource = readFileSync(new URL('../worker/src/handler.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../worker/src/ledger.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../shared/receipt-view.js', import.meta.url), 'utf8');

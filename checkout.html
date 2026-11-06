@@ -1072,8 +1072,8 @@
        back to a browser-calculated price. */
     var PAYPAL_ORDER_API = '';
   </script>
-  <script type="module" src="shared/order-client.js?v=2"></script>
-  <script type="module" src="shared/receipt-view.js?v=2"></script>
+  <script type="module" src="shared/order-client.js?v=3"></script>
+  <script type="module" src="shared/receipt-view.js?v=3"></script>
   <script>
     (function () {
       var mode = (typeof PAYPAL_MODE !== 'undefined' && PAYPAL_MODE === 'live') ? 'live' : 'sandbox';
@@ -1226,10 +1226,14 @@
         return { name: name, email: email };
       }
 
-      function orderIdempotencyKey(cart) {
+      function orderIdempotencyName(cart) {
         var raw = cart.getItems().map(function (item) { return item.slug + ':' + item.qty; }).sort().join('|');
         var code = cart.getDiscountCode ? cart.getDiscountCode() : '';
-        var name = 'desanya_idem_' + raw + '|' + code;
+        return 'desanya_idem_' + raw + '|' + code;
+      }
+
+      function orderIdempotencyKey(cart) {
+        var name = orderIdempotencyName(cart);
         try {
           var existing = sessionStorage.getItem(name);
           if (existing) return existing;
@@ -1239,6 +1243,16 @@
         } catch (e) {
           return crypto.randomUUID();
         }
+      }
+
+      function forgetOrderIdempotencyKey(cart) {
+        try { sessionStorage.removeItem(orderIdempotencyName(cart)); } catch (e) {}
+      }
+
+      function rotateOrderIdempotencyKey(cart) {
+        var created = crypto.randomUUID();
+        try { sessionStorage.setItem(orderIdempotencyName(cart), created); } catch (e) {}
+        return created;
       }
 
       function configuredOrderApi() {
@@ -1308,11 +1322,31 @@
             }
             if (mode.mode === 'server') {
               var cartForApi = window.DesanyaCart;
-              var lines = cartForApi.getItems().map(function (item) { return { slug: item.slug, qty: item.qty }; });
-              return window.DesanyaOrderClient.createServerOrder(mode.url, {
-                items: lines,
-                discountCode: cartForApi.getDiscountCode ? cartForApi.getDiscountCode() : '',
-                idempotencyKey: orderIdempotencyKey(cartForApi)
+              var rotated = false;
+              function placeOrder(key) {
+                var lines = cartForApi.getItems().map(function (item) { return { slug: item.slug, qty: item.qty }; });
+                return window.DesanyaOrderClient.createServerOrder(mode.url, {
+                  items: lines,
+                  discountCode: cartForApi.getDiscountCode ? cartForApi.getDiscountCode() : '',
+                  idempotencyKey: key
+                });
+              }
+              function alreadyCaptured(created) {
+                try {
+                  var saved = JSON.parse(sessionStorage.getItem('desanya_last_order') || 'null');
+                  return !!(saved && saved.orderId === created.orderId && saved.captureId);
+                } catch (e) {
+                  return false;
+                }
+              }
+              return placeOrder(orderIdempotencyKey(cartForApi)).then(function (created) {
+                if (!alreadyCaptured(created) || rotated) return created;
+                rotated = true;
+                return placeOrder(rotateOrderIdempotencyKey(cartForApi));
+              }).catch(function (err) {
+                if (!err || err.status !== 401 || rotated) throw err;
+                rotated = true;
+                return placeOrder(rotateOrderIdempotencyKey(cartForApi));
               }).then(function (created) {
                 window.__desanyaExpectedAmount = created.amount;
                 return created.orderId;
@@ -1394,6 +1428,7 @@
                   showOrderError('Payment may have completed, but this browser could not store the note. Check PayPal before ordering again. Your cart is still here.');
                   return;
                 }
+                forgetOrderIdempotencyKey(window.DesanyaCart);
                 window.DesanyaCart.clear();
                 var receiptHref = window.DesanyaReceipt && capture.receiptToken
                   ? window.DesanyaReceipt.receiptPageHref(capture.orderId, capture.receiptToken)

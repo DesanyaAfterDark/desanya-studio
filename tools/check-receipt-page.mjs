@@ -206,7 +206,7 @@ expectEqual('print css hides the site chrome', css.includes('@media print') && c
 expectEqual('browser checkout still uses the thanks note', checkout.includes("window.location.href = 'thanks/#receipt'"), true);
 expectEqual('server checkout hands off to the receipt page', checkout.includes('receiptPageHref'), true);
 expectEqual('checkout api stays empty', checkout.includes("var PAYPAL_ORDER_API = '';"), true);
-expectEqual('order and receipt modules are cache-busted', checkout.includes('shared/order-client.js?v=2') && checkout.includes('shared/receipt-view.js?v=2') && page.includes('/shared/receipt-view.js?v=2'), true);
+expectEqual('order and receipt modules are cache-busted', checkout.includes('shared/order-client.js?v=3') && checkout.includes('shared/receipt-view.js?v=3') && page.includes('/shared/receipt-view.js?v=3'), true);
 
 if (failures.length) {
   console.error(failures.join('\n'));
