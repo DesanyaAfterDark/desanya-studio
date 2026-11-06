@@ -93,20 +93,21 @@ function rememberedIdemOwner(idempotencyKey) {
   }
 }
 
-function soleStoredOwner() {
-  if (typeof sessionStorage === 'undefined' || typeof sessionStorage.length !== 'number') return '';
+function storedOrderOwners() {
+  if (typeof sessionStorage === 'undefined' || typeof sessionStorage.length !== 'number') return [];
   const found = [];
   try {
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i) || '';
       if (!key.startsWith('desanya_owner_') || key.startsWith('desanya_owner_idem_')) continue;
       const secret = sessionStorage.getItem(key) || '';
-      if (/^[0-9a-f]{64}$/i.test(secret)) found.push(secret);
+      if (/^[0-9a-f]{64}$/i.test(secret) && !found.includes(secret)) found.push(secret);
+      if (found.length >= 20) break;
     }
   } catch {
-    return '';
+    return [];
   }
-  return found.length === 1 ? found[0] : '';
+  return found;
 }
 
 async function postJson(url, idempotencyKey, body, fetchImpl, extraHeaders) {
@@ -140,11 +141,34 @@ export async function createServerOrder(baseUrl, { items, discountCode, idempote
   if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || ''))) throw new Error('order_api_idempotency');
   const payload = { items };
   if (discountCode) payload.discountCode = discountCode;
-  const knownOwner = ownerSecret || rememberedIdemOwner(idempotencyKey) || soleStoredOwner();
-  const parsed = await postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(knownOwner));
+  const exact = ownerSecret || rememberedIdemOwner(idempotencyKey);
+  const post = (secret) => postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(secret));
+  let parsed;
+  let used = exact;
+  if (exact) {
+    parsed = await post(exact);
+  } else {
+    try {
+      parsed = await post('');
+      used = '';
+    } catch (err) {
+      if (err.status !== 401) throw err;
+      parsed = null;
+      for (const candidate of storedOrderOwners()) {
+        try {
+          parsed = await post(candidate);
+          used = candidate;
+          break;
+        } catch (retryErr) {
+          if (retryErr.status !== 401) throw retryErr;
+        }
+      }
+      if (!parsed) throw err;
+    }
+  }
   const order = readServerOrder(parsed);
   if (!order) throw new Error('order_api_bad_response');
-  const secret = order.ownerSecret || knownOwner;
+  const secret = order.ownerSecret || used;
   if (secret) {
     rememberOwner(order.orderId, secret);
     rememberIdemOwner(idempotencyKey, secret);

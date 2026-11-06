@@ -535,10 +535,12 @@ const blogKey = '46464646-4646-4646-4646-464646464646';
 const blogPay = scenarioPayPal('BLOGORD120', 'CAPBLOG120');
 const blogState = env();
 const blogHeaders = [];
+const blogKeys = [];
 globalThis.sessionStorage = memorySession();
 resetPayPalTokenCache();
 const blogFetch = async (url, init) => {
   blogHeaders.push(init.headers['order-owner'] || '');
+  blogKeys.push(init.headers['idempotency-key'] || '');
   return call(new Request('https://order-api.test/v1/orders', {
     method: 'POST',
     headers: { origin: 'https://desanya.tech', 'content-type': 'application/json', 'idempotency-key': blogKey, ...(init.headers['order-owner'] ? { 'order-owner': init.headers['order-owner'] } : {}) },
@@ -587,8 +589,24 @@ try {
 }
 expectEqual('a repeated create without the owner secret stays 401 and does not create again', {
   status: blogDenied,
-  creates: blogPay.creates()
-}, { status: 401, creates: 1 });
+  creates: blogPay.creates(),
+  sameKey: blogKeys.every((key) => key === blogKey)
+}, { status: 401, creates: 1, sameKey: true });
+const several = memorySession();
+several.setItem('desanya_owner_OTHERORD1', 'ff'.repeat(32));
+several.setItem('desanya_owner_BLOGORD120', blogFirst.ownerSecret);
+several.setItem('desanya_idem_blog-basic:1|', blogKey);
+globalThis.sessionStorage = several;
+const blogReturn = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('a return visit tries saved order proofs and does not create another order', {
+  id: blogReturn.orderId,
+  creates: blogPay.creates(),
+  sameKey: blogKeys.every((key) => key === blogKey)
+}, { id: 'BLOGORD120', creates: 1, sameKey: true });
 globalThis.sessionStorage = savedSession;
 
 const workerSource = readFileSync(new URL('../worker/src/handler.js', import.meta.url), 'utf8')

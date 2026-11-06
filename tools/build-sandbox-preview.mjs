@@ -208,7 +208,7 @@ This preview was packed from git ${commit}. It does not deploy the worker.
 
 The checkout page reads that file in the browser. While \`paypalClientId\` is empty, the page says NOT READY and does not load the PayPal script.
 
-A repeated click for the same cart sends the owner secret this browser stored. If that proof is gone, the worker returns 401 and does not start a second PayPal order. That 401 is not an origin rejection and it is not the binding secret.
+A new cart create does not send an owner secret. The worker returns one once. A later create for a cart this worker already accepted sends the secret stored for that cart, or tries the owner secrets already saved in this browser after a 401. The idempotency key is not replaced. If none of those secrets match, the result stays 401 and no second PayPal order is started.
 
 ## Worker settings this browser needs
 
