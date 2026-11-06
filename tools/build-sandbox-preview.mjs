@@ -3,6 +3,7 @@
  * The live checkout constants stay in the repository. This script only
  * writes a separate folder and zip. It does not call PayPal.
  */
+import { CATALOG } from '../shared/catalog.js';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync, statSync } from 'node:fs';
@@ -141,6 +142,37 @@ if (receipt.includes(liveId) || receipt.includes('PAYPAL_CLIENT_SECRET') || rece
 }
 writeFileSync(join(outDir, 'receipt/index.html'), receipt);
 
+const serviceItems = Object.entries(CATALOG).sort((a, b) => a[1].name < b[1].name ? -1 : 1);
+const serviceList = serviceItems.map(([slug, item]) => {
+  const price = item.recurring ? '$' + item.price + '/mo' : '$' + item.price;
+  const safeName = String(item.name).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+  return `<li><button type="button" data-add-to-cart="${slug}">Add ${safeName}</button> <span>${price}</span></li>`;
+}).join('\n');
+mkdirSync(join(outDir, 'services'), { recursive: true });
+writeFileSync(join(outDir, 'services/index.html'), `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sandbox services — Desanya Studio</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="/assets/site.min.css?v=38">
+</head>
+<body>
+  <main id="main" class="container" style="padding:2rem 1rem 6rem">
+    <p class="eyebrow">Sandbox preview</p>
+    <h1>Services</h1>
+    <p>This page is only for the localhost sandbox preview. It uses the same catalog and cart as checkout. It is not desanya.tech.</p>
+    <p><a class="btn btn-primary" href="/checkout.html">Go to checkout</a> <button type="button" class="btn btn-secondary" data-cart-open>Open cart</button></p>
+    <ul>
+${serviceList}
+    </ul>
+  </main>
+  <script src="/assets/cart.js?v=9"></script>
+</body>
+</html>
+`);
+
 writeFileSync(join(outDir, 'sandbox-public-config.js'), `/* Public sandbox settings for this preview only.
    Edit this file in the unzipped folder. Do not edit the git repository.
    paypalClientId is the public client id of Finance's sandbox REST app.
@@ -194,11 +226,17 @@ From this folder:
 python3 -m http.server 8080 --bind 127.0.0.1
 \`\`\`
 
-Open http://localhost:8080/checkout.html
+Open http://localhost:8080/services/ to add a catalog service, then http://localhost:8080/checkout.html
+
+There is no separate cart helper. \`services/index.html\` is the storefront entry.
 
 The button uses PayPal's JavaScript SDK. Approval stays in the SDK popup and returns through \`onApprove\`. This preview does not add \`return_url\`. After a completed worker capture, the page opens the receipt with the receipt token in the address hash. The owner secret stays in session storage and is sent only as the \`order-owner\` header.
 
-A successful SDK payment, worker capture, and receipt page in this browser is still required before anyone calls the path end to end. This package does not perform that test.
+A reload in the same browser can show the receipt again because the token is stored in session storage. This package does not audit PayPal for a duplicate capture on reload. Do not describe a repeated receipt display as proof that PayPal was not called again.
+
+The receipt page removes the token from the address after storing it. Printing then uses an address without the token. Browsers can still print the remaining address in their own header or footer. Page CSS cannot turn that browser setting off.
+
+A successful SDK payment, worker capture, and receipt page in this browser was reported separately by Finance for three sandbox orders. This package does not repeat that test.
 
 ## What this is not
 

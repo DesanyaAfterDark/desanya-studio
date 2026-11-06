@@ -5,13 +5,16 @@
 import { readFileSync } from 'node:fs';
 import {
   acceptServerReceipt,
+  adoptReceiptCapability,
   applyReceiptView,
   formatPaidAt,
   loadReceiptPage,
+  RECEIPT_CONTACT,
   receiptLookup,
   receiptPageHref,
   viewReceipt
 } from '../shared/receipt-view.js';
+import { RECEIPT_CONTACT as ledgerContact } from '../worker/src/ledger.js';
 
 const failures = [];
 function expectEqual(name, actual, expected) {
@@ -125,7 +128,8 @@ function fakeDocument() {
     title: '',
     body: { dataset: { orderApi: 'https://orders.example.com' } },
     getElementById(id) { return nodes[id]; },
-    createElement() { return node(''); }
+    createElement() { return node(''); },
+    createTextNode(text) { return { textContent: String(text), children: [] }; }
   };
 }
 
@@ -158,11 +162,44 @@ expectEqual('retry checks the receipt and does not capture', {
 }, { methods: ['GET', 'GET'], capture: false, amount: 'USD 900.00' });
 doc.getElementById('receipt-print').listeners.click();
 expectEqual('print button calls window.print', globalThis.window.printed, 1);
+const paidCell = doc.getElementById('receipt-lines').children[0].children[0];
+expectEqual('each paid cell names its field', paidCell.children[0].textContent, 'Item');
+
+const capability = 'cd'.repeat(32);
+const stored = new Map();
+const memory = {
+  setItem(key, value) { stored.set(key, value); },
+  getItem(key) { return stored.has(key) ? stored.get(key) : null; }
+};
+let address = 'http://localhost:8080/receipt/?order=ORDER123&amount=0.01#' + capability;
+const history = { replaceState(_state, _title, next) { address = 'http://localhost:8080' + next; } };
+const location = { get href() { return address; } };
+const adopted = adoptReceiptCapability(memory, location, history);
+expectEqual('token leaves the address and stays available for reload', {
+  token: adopted.token,
+  addressHasToken: address.includes(capability),
+  address: address
+}, {
+  token: capability,
+  addressHasToken: false,
+  address: 'http://localhost:8080/receipt/?order=ORDER123&amount=0.01'
+});
+const reloaded = adoptReceiptCapability(memory, { href: address }, history);
+expectEqual('reload without the token in the address still finds it', reloaded.token, capability);
+const privacy = readFileSync(new URL('../privacy.html', import.meta.url), 'utf8');
+const footer = readFileSync(new URL('../partials/footer.html', import.meta.url), 'utf8');
+expectEqual('receipt contact matches the public studio address', {
+  page: RECEIPT_CONTACT,
+  ledger: ledgerContact,
+  privacy: privacy.includes('mailto:' + RECEIPT_CONTACT),
+  footer: footer.includes('mailto:' + RECEIPT_CONTACT)
+}, { page: 'desanyaafterdark@gmail.com', ledger: 'desanyaafterdark@gmail.com', privacy: true, footer: true });
 
 const page = readFileSync(new URL('../receipt/index.html', import.meta.url), 'utf8');
 const checkout = readFileSync(new URL('../checkout.html', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../assets/receipt.css', import.meta.url), 'utf8');
-expectEqual('receipt page does not read session storage', page.includes('desanya_last_order') || page.includes('sessionStorage'), false);
+expectEqual('receipt page does not read the browser payment note', page.includes('desanya_last_order'), false);
+expectEqual('receipt page keeps the capability out of the printed address', page.includes('adoptReceiptCapability'), true);
 expectEqual('receipt api constant stays empty', page.includes("var api = '';"), true);
 expectEqual('print control is a button', page.includes('id="receipt-print"') && page.includes('type="button"'), true);
 expectEqual('print css hides the site chrome', css.includes('@media print') && css.includes('.desanya-chat') && css.includes('window.print') === false, true);

@@ -672,7 +672,7 @@
 </script>
   <!-- /@partial:business-jsonld -->
   <!-- /@partial:head-common -->
-  <link rel="stylesheet" href="/assets/receipt.css?v=4">
+  <link rel="stylesheet" href="/assets/receipt.css?v=5">
 </head>
 <body>
   <!-- @partial:header -->
@@ -1037,8 +1037,10 @@
     var api = '';
     document.body.dataset.orderApi = api;
     if (window.DesanyaReceipt) {
+      var cap = window.DesanyaReceipt.adoptReceiptCapability(window.sessionStorage, window.location, window.history);
       window.DesanyaReceipt.loadReceiptPage(document, window.location, {
         apiConfigured: /^https:\/\//.test(api),
+        token: cap.token,
         fetchImpl: window.fetch.bind(window)
       });
     }

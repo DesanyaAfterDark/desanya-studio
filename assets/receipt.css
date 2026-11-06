@@ -60,6 +60,9 @@
   color: var(--text-muted);
   max-width: 40rem;
 }
+.receipt-cell-label {
+  display: none;
+}
 @media (max-width: 480px) {
   .receipt-sheet {
     padding: 1rem 4.75rem 1rem 1rem;
@@ -80,7 +83,20 @@
     white-space: normal;
   }
   .receipt-lines thead {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .receipt-cell-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-muted);
   }
   .receipt-meta th,
   .receipt-lines td:first-child {
@@ -128,11 +144,38 @@
     border: 0;
     box-shadow: none !important;
   }
-  .receipt-meta th,
+  .receipt-lines,
+  .receipt-meta {
+    display: table !important;
+    width: 100%;
+  }
+  .receipt-lines thead,
+  .receipt-meta thead {
+    display: table-header-group !important;
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+  }
+  .receipt-lines tbody,
+  .receipt-meta tbody {
+    display: table-row-group !important;
+  }
+  .receipt-lines tr,
+  .receipt-meta tr {
+    display: table-row !important;
+  }
   .receipt-lines th,
-  .receipt-meta td,
-  .receipt-lines td {
+  .receipt-lines td,
+  .receipt-meta th,
+  .receipt-meta td {
+    display: table-cell !important;
     color: #111 !important;
     border-bottom: 1px solid #bbb;
+  }
+  .receipt-cell-label {
+    display: none !important;
   }
 }

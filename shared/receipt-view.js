@@ -19,6 +19,26 @@ export function receiptLookup(href) {
   };
 }
 
+export function adoptReceiptCapability(storage, location, history) {
+  const lookup = receiptLookup(location.href);
+  let token = lookup.token;
+  if (lookup.orderId && token && storage) {
+    try { storage.setItem('desanya_receipt_' + lookup.orderId, token); } catch { /* private mode */ }
+  }
+  if (!token && lookup.orderId && storage) {
+    try {
+      const saved = storage.getItem('desanya_receipt_' + lookup.orderId) || '';
+      if (/^[0-9a-f]{64}$/i.test(saved)) token = saved;
+    } catch { /* private mode */ }
+  }
+  if (lookup.token && history && typeof history.replaceState === 'function') {
+    const url = new URL(location.href);
+    url.hash = '';
+    history.replaceState(null, '', url.pathname + url.search);
+  }
+  return { orderId: lookup.orderId, token: token || '' };
+}
+
 export function receiptPageHref(orderId, token) {
   if (!/^[A-Z0-9]+$/.test(String(orderId || '')) || !/^[0-9a-f]{64}$/i.test(String(token || ''))) return '';
   return 'receipt/?order=' + encodeURIComponent(orderId) + '#' + token;
@@ -113,7 +133,7 @@ const COPY = {
   unavailable: 'A server receipt is not available from this page yet. Checkout is not using the order service. A note saved in this browser is not this receipt.',
   needs_link: 'This page needs a receipt link from a confirmed payment. The address alone is not a receipt.',
   error: 'The order service did not confirm this receipt. Nothing on this page was paid from the address or from saved browser data. Paying again will not retry from here.',
-  screenNote: 'PayPal may send its own payment notification. That message is separate from this page. This page does not email a receipt, and it does not guarantee that an email arrives. To keep a file, use Print or save as PDF and choose Save as PDF in the print dialog.'
+  screenNote: 'PayPal may send its own payment notification. That message is separate from this page. This page does not email a receipt, and it does not guarantee that an email arrives. To keep a file, use Print or save as PDF and choose Save as PDF in the print dialog. This page removes the receipt token from the address after it is stored in this browser, so a later print of that address does not include the token. The browser’s own header and footer are outside this page: styles cannot turn them off. The order id can still be printed there. Reloading this browser still uses the stored token. The printed address alone is not enough to open the receipt.'
 };
 
 export function applyReceiptView(doc, model) {
@@ -151,13 +171,11 @@ export function applyReceiptView(doc, model) {
       later.textContent = 'USD ' + receipt.laterRecurring + ' is billed later and is not included in the amount paid.';
       futureLines.replaceChildren();
       for (const line of recurring) {
-        const row = doc.createElement('tr');
-        for (const value of [line.name, line.quantity, 'USD ' + line.catalogUnitAmount]) {
-          const cell = doc.createElement('td');
-          cell.textContent = value;
-          row.appendChild(cell);
-        }
-        futureLines.appendChild(row);
+        futureLines.appendChild(labeledRow(doc, [
+          ['Requested service', line.name],
+          ['Qty', line.quantity],
+          ['Catalog price', 'USD ' + line.catalogUnitAmount]
+        ]));
       }
     } else {
       future.hidden = true;
@@ -168,19 +186,32 @@ export function applyReceiptView(doc, model) {
   const body = doc.getElementById('receipt-lines');
   body.replaceChildren();
   for (const line of receipt.lines) {
-    const row = doc.createElement('tr');
-    for (const value of [line.name, line.quantity, 'USD ' + line.unitAmount]) {
-      const cell = doc.createElement('td');
-      cell.textContent = value;
-      row.appendChild(cell);
-    }
-    body.appendChild(row);
+    body.appendChild(labeledRow(doc, [
+      ['Item', line.name],
+      ['Qty', line.quantity],
+      ['Unit price', 'USD ' + line.unitAmount]
+    ]));
   }
   doc.getElementById('receipt-screen-note').textContent = COPY.screenNote;
 }
 
-export function loadReceiptPage(doc, location, { apiConfigured, fetchImpl }) {
-  const lookup = receiptLookup(location.href);
+function labeledRow(doc, pairs) {
+  const row = doc.createElement('tr');
+  for (const [label, value] of pairs) {
+    const cell = doc.createElement('td');
+    const name = doc.createElement('span');
+    name.className = 'receipt-cell-label';
+    name.textContent = label;
+    cell.appendChild(name);
+    cell.appendChild(doc.createTextNode(value));
+    row.appendChild(cell);
+  }
+  return row;
+}
+
+export function loadReceiptPage(doc, location, { apiConfigured, fetchImpl, token }) {
+  const fromAddress = receiptLookup(location.href);
+  const lookup = { orderId: fromAddress.orderId, token: fromAddress.token || token || '' };
   const printButton = doc.getElementById('receipt-print');
   if (printButton && !printButton.dataset.bound) {
     printButton.dataset.bound = '1';
@@ -189,7 +220,7 @@ export function loadReceiptPage(doc, location, { apiConfigured, fetchImpl }) {
   const retry = doc.getElementById('receipt-retry');
   if (retry && !retry.dataset.bound) {
     retry.dataset.bound = '1';
-    retry.addEventListener('click', () => loadReceiptPage(doc, location, { apiConfigured, fetchImpl }));
+    retry.addEventListener('click', () => loadReceiptPage(doc, location, { apiConfigured, fetchImpl, token: lookup.token }));
   }
   if (!apiConfigured || !lookup.orderId || !lookup.token) {
     applyReceiptView(doc, viewReceipt({ apiConfigured, lookup, serverBody: null, serverError: false }));
@@ -218,6 +249,7 @@ if (typeof window !== 'undefined') {
   window.DesanyaReceipt = {
     receiptPageHref,
     receiptLookup,
+    adoptReceiptCapability,
     acceptServerReceipt,
     viewReceipt,
     applyReceiptView,
