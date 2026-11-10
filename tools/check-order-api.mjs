@@ -87,11 +87,14 @@ function env() {
     ALLOWED_ORIGINS: 'https://desanya.tech'
   };
 }
-function call(request, state, fetchImpl, now) {
+function call(request, state, fetchImpl, now, extra) {
   return handleRequest(request, state, {
     fetch: fetchImpl,
     ledger: state.ledger,
-    now: now || (() => Date.now())
+    now: now || (() => Date.now()),
+    approvalDelays: [0],
+    sleep: async () => {},
+    ...(extra || {})
   });
 }
 function approvedOrder(id, value, customId) {
@@ -490,6 +493,131 @@ expectEqual('mixed receipt shows 900 paid and 99 later', {
   later: mixedReceipt.laterRecurring,
   monthly: mixedReceipt.requested.filter((line) => line.recurring).map((line) => line.catalogUnitAmount)
 }, { paid: '900.00', paidLine: ['Website — Basic 900.00'], later: '99.00', monthly: ['99.00'] });
+
+resetPayPalTokenCache();
+const delayedPay = scenarioPayPal('DELAYED001', 'CAPDELAY01');
+const delayedState = env();
+const delayedKey = 'a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1';
+const delayedCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': delayedKey }), delayedState, delayedPay.fetch);
+const delayedBody = await delayedCreated.json();
+expectEqual('monthly-only create is a 1.00 deposit', { status: delayedCreated.status, amount: delayedBody.amount, paypal: delayedPay.createBody().purchase_units[0].amount.value }, {
+  status: 201, amount: '1.00', paypal: '1.00'
+});
+let delayedGets = 0;
+const delayedFetch = async (url, init) => {
+  const target = String(url);
+  if (target.endsWith('/v2/checkout/orders/DELAYED001') && (!init.method || init.method === 'GET')) {
+    delayedGets += 1;
+    if (delayedGets >= 2) delayedPay.approve();
+  }
+  return delayedPay.fetch(url, init);
+};
+const delayedCaptured = await call(
+  post('/v1/orders/DELAYED001/capture', {}, { 'idempotency-key': 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2', 'order-owner': delayedBody.ownerSecret }),
+  delayedState,
+  delayedFetch,
+  undefined,
+  { approvalDelays: [0, 0] }
+);
+const delayedCaptureBody = await delayedCaptured.json();
+expectEqual('monthly capture waits for PayPal approval after 3DS', {
+  status: delayedCaptured.status,
+  amount: delayedCaptureBody.amount,
+  laterGets: delayedGets,
+  posts: delayedPay.captures()
+}, { status: 200, amount: '1.00', laterGets: 2, posts: 1 });
+
+resetPayPalTokenCache();
+const pendingPay = scenarioPayPal('PENDING001', 'CAPPEND001');
+const pendingState = env();
+const pendingKey = 'c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3';
+const pendingCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': pendingKey }), pendingState, pendingPay.fetch);
+const pendingOwner = (await pendingCreated.json()).ownerSecret;
+let pendingGets = 0;
+const pendingFetch = async (url, init) => {
+  const target = String(url);
+  if (target.endsWith('/v2/checkout/orders/PENDING001') && (!init.method || init.method === 'GET')) {
+    pendingGets += 1;
+    const order = { id: 'PENDING001', status: 'PAYER_ACTION_REQUIRED', intent: 'CAPTURE', purchase_units: [] };
+    return response(order);
+  }
+  return pendingPay.fetch(url, init);
+};
+const pendingCapture = await call(
+  post('/v1/orders/PENDING001/capture', {}, { 'idempotency-key': 'd4d4d4d4-d4d4-d4d4-d4d4-d4d4d4d4d4d4', 'order-owner': pendingOwner }),
+  pendingState,
+  pendingFetch,
+  undefined,
+  { approvalDelays: [0, 0, 0] }
+);
+expectEqual('unready PayPal status is not an amount mismatch', {
+  status: pendingCapture.status,
+  body: await pendingCapture.json(),
+  gets: pendingGets,
+  posts: pendingPay.captures()
+}, { status: 409, body: { error: 'not_approved' }, gets: 3, posts: 0 });
+pendingPay.approve();
+const pendingLater = await call(
+  post('/v1/orders/PENDING001/capture', {}, { 'idempotency-key': 'e5e5e5e5-e5e5-e5e5-e5e5-e5e5e5e5e5e5', 'order-owner': pendingOwner }),
+  pendingState,
+  pendingPay.fetch
+);
+expectEqual('a later approved monthly capture still works after an early not_approved', {
+  status: pendingLater.status,
+  amount: (await pendingLater.json()).amount,
+  posts: pendingPay.captures()
+}, { status: 200, amount: '1.00', posts: 1 });
+
+resetPayPalTokenCache();
+const onePay = scenarioPayPal('ONEDOLLAR1', 'CAPONE0001');
+const oneState = env();
+const oneKey = 'f6f6f6f6-f6f6-f6f6-f6f6-f6f6f6f6f6f6';
+const oneCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': oneKey }), oneState, onePay.fetch);
+const oneOwner = (await oneCreated.json()).ownerSecret;
+onePay.approve();
+const oneFetch = async (url, init) => {
+  const res = await onePay.fetch(url, init);
+  if (String(url).endsWith('/v2/checkout/orders/ONEDOLLAR1') && (!init.method || init.method === 'GET')) {
+    const body = await res.clone().json();
+    if (body && body.purchase_units && body.purchase_units[0] && body.purchase_units[0].amount) {
+      body.purchase_units[0].amount.value = '1';
+    }
+    return response(body, res.status);
+  }
+  return res;
+};
+const oneCaptured = await call(
+  post('/v1/orders/ONEDOLLAR1/capture', {}, { 'idempotency-key': 'a7a7a7a7-a7a7-a7a7-a7a7-a7a7a7a7a7a7', 'order-owner': oneOwner }),
+  oneState,
+  oneFetch
+);
+expectEqual('PayPal amount 1 still matches a 1.00 monthly deposit', {
+  status: oneCaptured.status,
+  amount: (await oneCaptured.json()).amount
+}, { status: 200, amount: '1.00' });
+
+let clientTries = 0;
+const clientSleeps = [];
+const clientCapture = await captureServerOrder('https://orders.example.com', 'CLIENTCAP1', {
+  idempotencyKey: 'b8b8b8b8-b8b8-b8b8-b8b8-b8b8b8b8b8b8',
+  expectedAmount: '1.00',
+  ownerSecret: 'ab'.repeat(32),
+  retryDelays: [0, 0, 0],
+  sleep: async (ms) => { clientSleeps.push(ms); },
+  fetchImpl: async () => {
+    clientTries += 1;
+    if (clientTries < 3) return new Response(JSON.stringify({ error: 'not_approved' }), { status: 409, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({
+      orderId: 'CLIENTCAP1', captureId: 'CLIENTCAPX', status: 'COMPLETED', currency: 'USD', amount: '1.00', receiptToken: 'cd'.repeat(32)
+    }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
+});
+expectEqual('client retries a 409 not_approved capture', {
+  tries: clientTries,
+  amount: clientCapture.amount,
+  id: clientCapture.captureId
+}, { tries: 3, amount: '1.00', id: 'CLIENTCAPX' });
+
 
 resetPayPalTokenCache();
 const pricePay = scenarioPayPal('SAMEPRICE1', 'CAPSAME001');

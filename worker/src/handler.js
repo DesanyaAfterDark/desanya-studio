@@ -149,13 +149,43 @@ function purchaseUnit(order) {
   return units.length === 1 ? units[0] : null;
 }
 
+function amountsMatch(left, right) {
+  if (String(left) === String(right)) return true;
+  const a = Number(left);
+  const b = Number(right);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  return a.toFixed(2) === b.toFixed(2);
+}
+
+const WAITABLE_PAYPAL_STATUS = new Set(['CREATED', 'PAYER_ACTION_REQUIRED', 'PENDING', 'PENDING_APPROVAL']);
+
+function defaultApprovalDelays() {
+  return [0, 500, 1000, 1600, 2400];
+}
+
+async function readPayPalOrderUntilReady(env, fetchImpl, orderId, deps) {
+  const sleep = typeof deps.sleep === 'function' ? deps.sleep : (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  const delays = Array.isArray(deps.approvalDelays) ? deps.approvalDelays : defaultApprovalDelays();
+  const list = delays.length ? delays : [0];
+  let last = { ok: false, status: 0, body: null };
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] > 0) await sleep(list[i]);
+    last = await paypal(env, fetchImpl, '/v2/checkout/orders/' + orderId, { method: 'GET' });
+    const status = last.body && last.body.status;
+    if (!last.ok || !status) return last;
+    if (status === 'APPROVED' || status === 'COMPLETED') return last;
+    if (!WAITABLE_PAYPAL_STATUS.has(status)) return last;
+  }
+  return last;
+}
+
 function completedCapture(order, expectedValue) {
   const unit = purchaseUnit(order);
   if (!unit || !unit.payments || !Array.isArray(unit.payments.captures) || unit.payments.captures.length !== 1) return null;
   const capture = unit.payments.captures[0];
   const amount = capture && capture.amount ? capture.amount : {};
   if (!capture || capture.status !== 'COMPLETED' || order.status !== 'COMPLETED') return null;
-  if (amount.currency_code !== 'USD' || amount.value !== expectedValue) return null;
+  if (amount.currency_code !== 'USD' || !amountsMatch(amount.value, expectedValue)) return null;
   if (!/^[A-Z0-9]+$/.test(String(capture.id || ''))) return null;
   return { captureId: String(capture.id) };
 }
@@ -310,7 +340,7 @@ async function finishCompleted(ledger, request, origin, record, captureId, now) 
   return json(200, publicCapture(saved, !!saved.ownerHash || legacyToken(saved, request)), origin);
 }
 
-async function captureOrder(request, env, fetchImpl, origin, ledger, now, orderId) {
+async function captureOrder(request, env, fetchImpl, origin, ledger, now, orderId, deps = {}) {
   if (!/^[A-Z0-9]+$/.test(orderId) || orderId.length > 36) return json(404, { error: 'unknown_order' }, origin);
   const idempotencyKey = request.headers.get('idempotency-key') || '';
   if (!/^[0-9a-f-]{36}$/i.test(idempotencyKey)) return json(400, { error: 'invalid_idempotency' }, origin);
@@ -329,24 +359,25 @@ async function captureOrder(request, env, fetchImpl, origin, ledger, now, orderI
 
   let shown;
   try {
-    shown = await paypal(env, fetchImpl, '/v2/checkout/orders/' + orderId, { method: 'GET' });
+    shown = await readPayPalOrderUntilReady(env, fetchImpl, orderId, deps);
   } catch {
     return json(502, { error: 'paypal_unavailable' }, origin);
   }
   if (!shown.ok || !shown.body) return json(502, { error: 'paypal_rejected' }, origin);
-  const unit = purchaseUnit(shown.body);
-  const amount = unit && unit.amount ? unit.amount : {};
-  const rebound = await hmacHex(env.ORDER_BINDING_SECRET, amount.value + '|USD|' + record.cartHash + '|' + record.idempotencyKey);
-  if (!unit || amount.currency_code !== 'USD' || amount.value !== record.value || !safeEqual(String(unit.custom_id || ''), record.customId) || !safeEqual(rebound.slice(0, 127), record.customId)) {
-    try { ledger.markMismatch(orderId); } catch { return json(503, { error: 'storage_unavailable' }, origin); }
-    return json(409, { error: 'amount_mismatch' }, origin);
-  }
   if (shown.body.status === 'COMPLETED') {
     const existing = completedCapture(shown.body, record.value);
     if (!existing) return json(409, { error: 'amount_mismatch' }, origin);
     return finishCompleted(ledger, request, origin, record, existing.captureId, now);
   }
   if (shown.body.status !== 'APPROVED') return json(409, { error: 'not_approved' }, origin);
+  const unit = purchaseUnit(shown.body);
+  const amount = unit && unit.amount ? unit.amount : {};
+  const reboundValue = amountsMatch(amount.value, record.value) ? record.value : amount.value;
+  const rebound = await hmacHex(env.ORDER_BINDING_SECRET, reboundValue + '|USD|' + record.cartHash + '|' + record.idempotencyKey);
+  if (!unit || amount.currency_code !== 'USD' || !amountsMatch(amount.value, record.value) || !safeEqual(String(unit.custom_id || ''), record.customId) || !safeEqual(rebound.slice(0, 127), record.customId)) {
+    try { ledger.markMismatch(orderId); } catch { return json(503, { error: 'storage_unavailable' }, origin); }
+    return json(409, { error: 'amount_mismatch' }, origin);
+  }
 
   let claim;
   try { claim = ledger.claimCapture(orderId, now()); } catch { return json(503, { error: 'storage_unavailable' }, origin); }
@@ -429,6 +460,6 @@ export async function handleRequest(request, env, deps = {}) {
   if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' }, origin);
   if (url.pathname === '/v1/orders') return createOrder(request, ready, fetchImpl, origin, ledger, now);
   const captureMatch = url.pathname.match(/^\/v1\/orders\/([A-Z0-9]+)\/capture$/);
-  if (captureMatch) return captureOrder(request, ready, fetchImpl, origin, ledger, now, captureMatch[1]);
+  if (captureMatch) return captureOrder(request, ready, fetchImpl, origin, ledger, now, captureMatch[1], deps);
   return json(404, { error: 'not_found' }, origin);
 }
