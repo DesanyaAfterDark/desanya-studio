@@ -1478,10 +1478,17 @@
             err.textContent = 'Payment canceled. Your cart is still here.';
             err.hidden = false;
           },
-          onError: function () {
-            var err = document.getElementById('checkout-error');
-            err.textContent = 'Something went wrong with PayPal. Please try again.';
-            err.hidden = false;
+          onError: function (err) {
+            var box = document.getElementById('checkout-error');
+            box.textContent = 'Something went wrong with PayPal. Please try again.';
+            box.hidden = false;
+            try {
+              var name = (err && typeof err.name === 'string') ? err.name : '';
+              var message = (err && typeof err.message === 'string') ? err.message : '';
+              name = name.replace(/[A-Za-z0-9_-]{16,}/g, '[redacted]').slice(0, 80);
+              message = message.replace(/[A-Za-z0-9_-]{16,}/g, '[redacted]').slice(0, 200);
+              console.warn('PayPal onError', { name: name || 'Error', message: message || 'no message' });
+            } catch (ignore) {}
           }
         }).render('#paypal-buttons');
       }

@@ -630,6 +630,16 @@ const workerSource = readFileSync(new URL('../worker/src/handler.js', import.met
   + readFileSync(new URL('../worker/src/ledger.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../shared/receipt-view.js', import.meta.url), 'utf8');
 expectEqual('no email sender was added', /resend|brevo|mailchannels|smtp|receipt_email/i.test(workerSource), false);
+const onErrorSlice = checkoutSource.slice(checkoutSource.indexOf('onError: function'), checkoutSource.indexOf("}).render('#paypal-buttons')"));
+expectEqual('checkout onError logs a sanitized reason and keeps the generic buyer message', {
+  generic: onErrorSlice.includes('Something went wrong with PayPal. Please try again.'),
+  logsMessage: onErrorSlice.includes('err.message'),
+  logsName: onErrorSlice.includes('err.name'),
+  console: onErrorSlice.includes('console.warn'),
+  redactsTokens: onErrorSlice.includes('[redacted]') && onErrorSlice.includes('[A-Za-z0-9_-]{16,}'),
+  noRawDump: !onErrorSlice.includes('JSON.stringify(err)') && !/console\.\w+\(\s*err\s*[,)]/.test(onErrorSlice)
+}, { generic: true, logsMessage: true, logsName: true, console: true, redactsTokens: true, noRawDump: true });
+
 
 if (failures.length) {
   console.error(failures.join('\n'));
