@@ -48,10 +48,14 @@ def webp_source(post, sizes):
     path, _, query = webp.partition("?")
     srcset = webp
     if path.endswith(".webp"):
-        small = path[:-5] + "-720.webp"
-        if (ROOT / small.lstrip("/")).is_file():
-            small_url = small + (("?" + query) if query else "")
-            srcset = f"{small_url} 720w, {webp} 1600w"
+        # Prefer a 960px file when it exists. A 720px file is the next step down.
+        # One smaller candidate keeps the blog index on a single download.
+        for width in (960, 720):
+            small = path[:-5] + f"-{width}.webp"
+            if (ROOT / small.lstrip("/")).is_file():
+                small_url = small + (("?" + query) if query else "")
+                srcset = f"{small_url} {width}w, {webp} 1600w"
+                break
     size_attr = f' sizes="{sizes}"' if " " in srcset else ""
     return f'<source type="image/webp" srcset="{esc(srcset)}"{size_attr}>'
 
