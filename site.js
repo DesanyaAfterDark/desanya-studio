@@ -303,7 +303,7 @@ var DESANYA_LINKS = {
 
   function initServiceJump() {
     var nav = document.querySelector('.service-jump');
-    if (!nav || !('IntersectionObserver' in window)) return;
+    if (!nav) return;
     var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
     var byCat = {};
     links.forEach(function (link) {
@@ -316,6 +316,10 @@ var DESANYA_LINKS = {
     if (!cards.length || !links.length) return;
     var row = nav.querySelector('ul');
     var current = null;
+    var pauseSpy = false;
+    var settleTimer = 0;
+    var observer = null;
+
     function activate(link) {
       if (!link || link === current) return;
       current = link;
@@ -328,10 +332,16 @@ var DESANYA_LINKS = {
         row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
       }
     }
+
     function readingLine() {
       var header = document.querySelector('.site-header');
-      return (header ? header.offsetHeight : 0) + nav.offsetHeight + 48;
+      var headerH = header ? header.offsetHeight : 0;
+      var underSticky = headerH + nav.offsetHeight;
+      // Same clearance as scroll-padding-top: header plus 5.25rem.
+      var pad = headerH + 84;
+      return Math.max(underSticky, pad) + 24;
     }
+
     function pickCard() {
       var line = readingLine();
       var best = null;
@@ -346,15 +356,64 @@ var DESANYA_LINKS = {
       }
       return best;
     }
-    var observer = new IntersectionObserver(function () {
+
+    function syncFromScroll() {
+      if (pauseSpy) return;
       var best = pickCard();
       if (best) activate(byCat[best.getAttribute('data-service-cat')]);
-    }, { rootMargin: '-20% 0px -40% 0px', threshold: [0, 0.25, 0.6] });
-    cards.forEach(function (card) { observer.observe(card); });
+    }
+
+    function releaseSpy() {
+      pauseSpy = false;
+      window.clearTimeout(settleTimer);
+      settleTimer = 0;
+      syncFromScroll();
+    }
+
+    function armSettle(ms) {
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(releaseSpy, ms);
+    }
+
+    function watch() {
+      if (!('IntersectionObserver' in window)) return;
+      if (observer) observer.disconnect();
+      var top = Math.max(0, Math.round(readingLine()));
+      observer = new IntersectionObserver(function () {
+        syncFromScroll();
+      }, {
+        rootMargin: '-' + top + 'px 0px -45% 0px',
+        threshold: [0, 0.1, 0.25]
+      });
+      cards.forEach(function (card) { observer.observe(card); });
+    }
+
+    links.forEach(function (link) {
+      link.addEventListener('click', function () {
+        activate(link);
+        pauseSpy = true;
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        armSettle(reduce ? 60 : 900);
+      });
+    });
+
     window.addEventListener('scroll', function () {
-      var best = pickCard();
-      if (best) activate(byCat[best.getAttribute('data-service-cat')]);
+      if (pauseSpy) {
+        armSettle(140);
+        return;
+      }
+      syncFromScroll();
     }, { passive: true });
+
+    if ('onscrollend' in window) {
+      window.addEventListener('scrollend', function () {
+        if (pauseSpy) releaseSpy();
+      });
+    }
+
+    window.addEventListener('resize', watch);
+    watch();
+    syncFromScroll();
   }
 
   /* ---------- Gallery lightbox ---------- */

@@ -4959,9 +4959,16 @@ html:has(body.page-services) {
   scroll-padding-top: calc(var(--header-h) + 5.25rem);
 }
 
-.page-services .price-card,
 .page-services .page-section {
   scroll-margin-top: calc(var(--header-h) + 5.25rem);
+}
+
+/* Category jumps target a price card. The services page already insets
+   the scrollport by the sticky header plus the jump bar. A second margin
+   of the same size pushed the card below that bar, so the previous
+   category stayed in the reading band. */
+.page-services .price-card {
+  scroll-margin-top: 0;
 }
 
 .page-services .service-filters {
