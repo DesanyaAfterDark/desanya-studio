@@ -47,6 +47,10 @@ expectEqual('unknown slug', (await quoteCart([{ slug: 'nope', qty: 1 }], { now: 
 expectEqual('qty 100', (await quoteCart([{ slug: 'website-basic', qty: 100 }], { now: CLOSED })).error, 'invalid_qty');
 expectEqual('quote ignores a client price field', (await quoteCart([{ slug: 'website-basic', qty: 1, price: 0.01 }], { now: CLOSED })).value, '900.00');
 expectEqual('alias website', (await quoteCart([{ slug: 'website', qty: 1 }], { now: CLOSED })).value, '1600.00');
+expectEqual('esports starter', (await quoteCart([{ slug: 'esports-starter', qty: 1 }], { now: CLOSED })).value, '75.00');
+expectEqual('esports stream', (await quoteCart([{ slug: 'esports-stream', qty: 1 }], { now: CLOSED })).value, '150.00');
+expectEqual('esports character', (await quoteCart([{ slug: 'esports-character', qty: 1 }], { now: CLOSED })).value, '200.00');
+expectEqual('esports full', (await quoteCart([{ slug: 'esports-full', qty: 1 }], { now: CLOSED })).value, '375.00');
 expectEqual('discount closed', (await quoteCart([{ slug: 'website-basic', qty: 1 }], { now: CLOSED, discountCode: CODE })).error, 'discount_inactive');
 expectEqual('bad code', (await quoteCart([{ slug: 'website-basic', qty: 1 }], { now: OPEN, discountCode: 'NOPE' })).error, 'discount_invalid');
 

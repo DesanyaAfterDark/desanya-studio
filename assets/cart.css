@@ -279,38 +279,84 @@ body.ds-cart-lock { overflow: hidden; }
   font-size: 1.3rem;
 }
 .checkout-line {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.5rem 1rem;
-  padding: 0.8rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 1rem 0;
   border-bottom: 1px solid var(--border);
-  align-items: center;
 }
 .checkout-line:last-of-type { border-bottom: 0; }
-.checkout-line-name { color: var(--text); font-weight: 600; }
+.checkout-line:not(:has(.checkout-line-actions)) {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.checkout-line-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.checkout-line-name {
+  min-width: 0;
+  color: var(--text);
+  font-weight: 600;
+}
 .checkout-line-name small {
   display: block;
   color: var(--text-dim);
   font-weight: 400;
   font-size: 0.8rem;
 }
+.checkout-line-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
 .checkout-line-qty {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  margin-top: 0.4rem;
+  gap: 0.35rem;
 }
-.checkout-line-qty button {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
+.checkout-line-qty button,
+.checkout-line-remove {
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 999px;
   border: 1px solid var(--border-strong);
   background: transparent;
   color: var(--text);
   cursor: pointer;
+  font: inherit;
+  font-weight: 600;
   line-height: 1;
 }
+.checkout-line-qty button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.checkout-line-remove {
+  padding: 0 0.9rem;
+}
+.checkout-line-qty button:hover,
+.checkout-line-remove:hover { border-color: var(--accent); }
+.checkout-line-qty button:focus-visible,
+.checkout-line-remove:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.checkout-line-qty span {
+  min-width: 1.75rem;
+  text-align: center;
+  font-weight: 700;
+}
 .checkout-line-total {
+  flex: 0 0 auto;
   color: var(--gold-soft);
   font-weight: 700;
   white-space: nowrap;

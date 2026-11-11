@@ -132,6 +132,30 @@ export const CATALOG = {
     "recurring": false,
     "rush": false
   },
+  "esports-character": {
+    "name": "Esports — Character Pack",
+    "price": 200,
+    "recurring": false,
+    "rush": false
+  },
+  "esports-full": {
+    "name": "Esports — Full Brand",
+    "price": 375,
+    "recurring": false,
+    "rush": false
+  },
+  "esports-starter": {
+    "name": "Esports — Starter",
+    "price": 75,
+    "recurring": false,
+    "rush": false
+  },
+  "esports-stream": {
+    "name": "Esports — Stream Pack",
+    "price": 150,
+    "recurring": false,
+    "rush": false
+  },
   "extra-page": {
     "name": "Extra page",
     "price": 200,

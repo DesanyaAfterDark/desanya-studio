@@ -46,6 +46,10 @@
     'email-basic':            { name: 'Email newsletter template — Basic', price: 125, recurring: false },
     'email-standard':         { name: 'Email newsletter template — Standard', price: 350, recurring: false },
     'email-premium':          { name: 'Email newsletter template — Premium', price: 600, recurring: false },
+    'esports-character':      { name: 'Esports — Character Pack', price: 200, recurring: false },
+    'esports-full':           { name: 'Esports — Full Brand', price: 375, recurring: false },
+    'esports-starter':        { name: 'Esports — Starter', price: 75, recurring: false },
+    'esports-stream':         { name: 'Esports — Stream Pack', price: 150, recurring: false },
     'extra-page':             { name: 'Extra page', price: 200, recurring: false },
     'extra-revision':         { name: 'Extra revision round', price: 40, recurring: false },
     'gbp-basic':              { name: 'Google Business Profile tune-up — Basic', price: 150, recurring: false },
@@ -677,9 +681,17 @@
     btn.style.right = (window.innerWidth - nr.left + 12) + 'px';
   }
 
+  function revealPromo() {
+    if (!discountLive()) return;
+    document.querySelectorAll('[data-discount-promo]').forEach(function (el) {
+      el.hidden = false;
+    });
+  }
+
   function init() {
     load();
     loadDiscountFlag();
+    revealPromo();
     buildDrawer();
     render();
     placeCart();

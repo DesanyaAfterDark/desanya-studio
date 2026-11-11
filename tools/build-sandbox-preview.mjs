@@ -154,7 +154,7 @@ writeFileSync(join(outDir, 'services/index.html'), `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sandbox services — Desanya Studio</title>
   <meta name="robots" content="noindex">
-  <link rel="stylesheet" href="/assets/site.min.css?v=38">
+  <link rel="stylesheet" href="/assets/site.min.css?v=39">
 </head>
 <body>
   <main id="main" class="container" style="padding:2rem 1rem 6rem">
@@ -166,7 +166,7 @@ writeFileSync(join(outDir, 'services/index.html'), `<!DOCTYPE html>
 ${serviceList}
     </ul>
   </main>
-  <script src="/assets/cart.js?v=9"></script>
+  <script src="/assets/cart.js?v=10"></script>
 </body>
 </html>
 `);

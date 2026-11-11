@@ -524,13 +524,13 @@ def render(data, groups, by_id):
             blocks.append(group_html(group, members, lazy_state))
     commission = data["commission"]
     blocks.append(
-        '    <aside class="gallery-commission">\n'
+        '    <div class="gallery-commission">\n'
         f'      <a class="gallery-cta" href="{esc(commission["href"])}">\n'
         '        <span class="gallery-cta-arrow" aria-hidden="true">→</span>\n'
         f'        <span class="gallery-title">{esc(commission["title"])}</span>\n'
         f'        <span class="gallery-tag">{esc(commission["tag"])}</span>\n'
         "      </a>\n"
-        "    </aside>"
+        "    </div>"
     )
     blocks.append(schema(ordered))
     body = "\n".join(blocks)

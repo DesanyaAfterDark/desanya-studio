@@ -419,6 +419,9 @@ var DESANYA_LINKS = {
     buttons.forEach(function (b) {
       b.addEventListener('click', function () { apply(b.getAttribute('data-filter')); });
     });
+    document.querySelectorAll('.service-jump a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function () { apply('all'); });
+    });
   }
 
   function initGalleryFilters() {
