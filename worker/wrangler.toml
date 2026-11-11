@@ -1,4 +1,5 @@
-# Not deployed. Do not run wrangler deploy from this repository state.
+# Production Worker desanya-order-api is live.
+# Do not run wrangler deploy from this checkout. Deployment is handled separately.
 # SQLite Durable Object only. Workers KV is not the order store.
 # Do not enable Workers Paid. See worker/README.md.
 name = "desanya-order-api"

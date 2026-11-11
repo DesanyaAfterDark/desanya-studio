@@ -156,13 +156,17 @@ def index_html(topics, posts):
         for topic in topics
         if by_topic[topic["id"]]
     ]
+    newest = [post for post in newest if not post.get("featured")]
+    newest_slugs = {post["slug"] for post in newest}
     for group in by_topic.values():
-        group[:] = [post for post in group if post["slug"] not in featured_slugs]
+        group[:] = [
+            post for post in group
+            if post["slug"] not in featured_slugs and post["slug"] not in newest_slugs
+        ]
     visible = [topic for topic in topics if by_topic[topic["id"]]]
     for post in featured:
         anchor = post["topic"] if post["topic"] not in {topic["id"] for topic in visible} else ""
         parts.append(hero(post, anchor))
-    newest = [post for post in newest if not post.get("featured")]
     if newest:
         parts.append(
             '        <section class="newest-block" aria-labelledby="newest-heading">\n'

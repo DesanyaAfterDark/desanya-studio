@@ -1,12 +1,14 @@
-# Order API (not deployed, not active)
+# Order API (live)
 
-This worker is reviewable code only. `checkout.html` keeps `PAYPAL_ORDER_API` empty, so the live site still creates PayPal orders in the browser. Nothing in this folder has been deployed. No PayPal app was created here, and no secret is stored in git.
+The production Worker `desanya-order-api` is live at `https://desanya-order-api.desanya-studio.workers.dev`. `checkout.html` and `receipt/index.html` call that worker. No secret is stored in git. Do not run `wrangler deploy` from this checkout. Deployment is handled separately.
+
+The notes below include the review from before that worker was switched on. They are history. They are not a claim that checkout still prices orders in the browser.
 
 The merged worker at `384a032087a42b67b61c5f6e7e14a7b16dcaccc8` stores orders in Workers KV. That package is a sandbox upload only. KV get-then-put is not exactly-once. This revision stores orders in one SQLite Durable Object instead. Do not deploy the KV package to live checkout.
 
 Finance Desk, 5 November 2026: the PayPal Business account is live. There is no dashboard-verified live REST app or live REST credential. Live API setup is unknown. A sandbox-only REST app is being handled separately by Finance. Do not create a second app and do not paste secrets into this repository.
 
-## What the worker does, once deployed and switched on
+## What the live worker does
 
 `POST /v1/orders` accepts service ids and quantities only. It prices them from `shared/catalog.js` (rush is 35% of list one-time prices, the November 2026 discount window and code hash, and the $1 monthly-only placeholder). It creates a PayPal Orders v2 order with server OAuth. The expected USD amount, cart hash, line items, and an HMAC binding are stored in one SQLite Durable Object named `desanya-orders`.
 
@@ -83,11 +85,9 @@ Those amounts match this catalog’s math. Matching arithmetic is not proof this
 
 A real sandbox test of this worker still has to happen before any live cutover. Mocked tests do not capture a sandbox payment and do not send email.
 
-## Transitional risk
+## Current checkout
 
-Until cutover, a buyer’s browser still decides the PayPal amount. `Object.freeze` on the page catalog only blocks a simple assignment. It is not a security control. The thanks-page text is what that browser saved. It is not the server receipt. The `/receipt/` page stays unavailable while `PAYPAL_ORDER_API` is empty, even if the address contains an amount.
-
-Do not describe checkout as server-validated while `PAYPAL_ORDER_API` is empty.
+Checkout creates the PayPal order through the live worker. The amount is the worker’s catalog price. The receipt page loads from the same worker. Do not run `wrangler deploy` as part of a site edit.
 
 ## Owner decisions still required
 
@@ -99,7 +99,7 @@ Do not do these until Cassandra approves them. This pull request does not.
 4. Set the route to fail closed so a free-quota 1027 does not skip the worker.
 5. Finance supplies the REST app out of band. Sandbox credentials stay in the sandbox worker. A live REST app does not exist in the dashboard record Finance checked. Do not point the live website at sandbox credentials, and do not paste either secret into git, chat, or the page.
 6. The PayPal JavaScript button client id on the page and the server OAuth client id must be the same REST app. The live page already has a live client id. A sandbox server app will not match it.
-7. After a sandbox preview works, approve merge and deployment. Then, in a separate reviewed change, set `PAYPAL_ORDER_API` on checkout and the same `https` origin in `receipt/index.html`. Leave both empty until then.
+7. Done. Checkout and the receipt page use `https://desanya-order-api.desanya-studio.workers.dev`. Do not change that URL, and do not redeploy the worker from a site edit.
 
 ## Secret storage
 

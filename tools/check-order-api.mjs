@@ -1,5 +1,5 @@
 /**
- * Mocked tests for the inactive order worker and the browser client.
+ * Mocked tests for the live order worker and the browser client.
  * No network calls. Finance sandbox order ids are not used as if this worker created them.
  */
 import { readFileSync } from 'node:fs';

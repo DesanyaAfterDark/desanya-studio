@@ -477,6 +477,7 @@
           '<div class="ds-cart-discount" data-cart-list hidden><span>Cart total</span><strong data-cart-list-total>$0</strong></div>' +
           '<div class="ds-cart-discount" data-cart-later hidden><span>Monthly, billed later</span><strong data-cart-later-total>$0</strong></div>' +
           '<div class="ds-cart-total"><span>Due today</span><strong data-cart-total>$0</strong></div>' +
+          '<p class="ds-cart-note" data-cart-bundle hidden>Full Brand is $375 and covers Starter, Stream Pack, and Character Pack. Bought separately they are $425.</p>' +
           '<p class="ds-cart-note" data-cart-placeholder hidden>This $1 is a placeholder. The monthly price is invoiced later.</p>' +
           '<p class="ds-cart-note" data-cart-recurring-note hidden>Monthly services are not charged today. Desanya Studio sends a manual PayPal invoice before each month. An unpaid invoice does not renew the service. <a href="/payment-terms.html">Payment &amp; refund terms</a>.</p>' +
           '<a class="btn btn-primary ds-cart-checkout" href="/checkout.html">Checkout</a>' +
@@ -497,6 +498,7 @@
     els.laterTotal = root.querySelector('[data-cart-later-total]');
     els.discount = root.querySelector('[data-cart-discount]');
     els.placeholder = root.querySelector('[data-cart-placeholder]');
+    els.bundle = root.querySelector('[data-cart-bundle]');
     els.recurringNote = root.querySelector('[data-cart-recurring-note]');
 
     root.addEventListener('click', function (e) {
@@ -580,6 +582,7 @@
           '<a class="btn btn-secondary btn-small" href="/services.html">Browse services</a>' +
         '</div>';
       els.foot.style.display = 'none';
+      if (els.bundle) els.bundle.hidden = true;
     } else {
       els.foot.style.display = '';
       els.items.innerHTML = items.map(function (it) {
@@ -591,9 +594,9 @@
             (it.rush ? '<span class="ds-cart-item-tag">35% of one-time items</span>' : '') +
           '</div>' +
           '<div class="ds-cart-item-qty">' +
-            '<button type="button" data-cart-qty="' + esc(it.slug) + '" data-delta="-1" aria-label="Decrease quantity">&minus;</button>' +
+            '<button type="button" data-cart-qty="' + esc(it.slug) + '" data-delta="-1" aria-label="Decrease quantity, ' + esc(it.name) + '">&minus;</button>' +
             '<span>' + it.qty + '</span>' +
-            '<button type="button" data-cart-qty="' + esc(it.slug) + '" data-delta="1" aria-label="Increase quantity">+</button>' +
+            '<button type="button" data-cart-qty="' + esc(it.slug) + '" data-delta="1" aria-label="Increase quantity, ' + esc(it.name) + '">+</button>' +
           '</div>' +
           '<button type="button" class="ds-cart-item-remove" data-cart-remove="' + esc(it.slug) + '" aria-label="Remove ' + esc(it.name) + '">&times;</button>' +
         '</div>';
@@ -619,6 +622,10 @@
         else if (monthlyHold) els.placeholder.textContent = 'This $1 is a placeholder. The monthly price is invoiced later.';
       }
       els.recurringNote.hidden = !hasRecurring();
+      if (els.bundle) {
+        var separatePacks = cart['esports-starter'] && cart['esports-stream'] && cart['esports-character'];
+        els.bundle.hidden = !(separatePacks && !cart['esports-full']);
+      }
       var off = discountAmount();
       if (els.discount) {
         if (off > 0) {

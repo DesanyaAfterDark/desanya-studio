@@ -42,12 +42,24 @@ PAGES = {
 MARK = re.compile(r"(<!-- @partial:(?P<name>[\w-]+) -->)(.*?)(<!-- /@partial:(?P=name) -->)", re.S)
 ATTR = re.compile(r'(\s(?:href|src|srcset)=)(["\'])([^"\']*)\2')
 
+def absolutize_url(url):
+    if not url or url.startswith(("/", "#", "mailto:", "tel:", "http://", "https://", "data:")):
+        return url
+    return "/" + url
+
 def absolutize(html):
     def repl(match):
-        prefix, quote, url = match.group(1), match.group(2), match.group(3)
-        if not url or url.startswith(("/", "#", "mailto:", "tel:", "http://", "https://", "data:")):
-            return match.group(0)
-        return f"{prefix}{quote}/{url}{quote}"
+        prefix, quote, value = match.group(1), match.group(2), match.group(3)
+        if prefix.strip().startswith("srcset="):
+            parts = []
+            for part in value.split(","):
+                bits = part.strip().split()
+                if not bits:
+                    continue
+                bits[0] = absolutize_url(bits[0])
+                parts.append(" ".join(bits))
+            return f"{prefix}{quote}{', '.join(parts)}{quote}"
+        return f"{prefix}{quote}{absolutize_url(value)}{quote}"
     return ATTR.sub(repl, html)
 
 def render(name, page_key, absolute, _depth=0):

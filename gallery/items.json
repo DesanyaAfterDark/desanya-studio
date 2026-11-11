@@ -21,12 +21,12 @@
       "chip": "Halloween 2026",
       "featured": false,
       "eyebrow": "Halloween 2026",
-      "lede": "All 10 of Desanya Studio’s AI helpers in Halloween costume, in one neon-pink, spooky-cute style.",
+      "lede": "Nine of Desanya Studio’s AI helpers in Halloween costume, in one neon-pink, spooky-cute style. The After Dark wolf costume is on the Esports & Gaming page.",
       "note": "Costumes are for the season. Every assistant still drafts and prepares, and nothing is sent, spent, or published without Desanya’s approval.",
       "postHref": "/blog/meet-our-spooky-ai-crew/",
       "postLabel": "Meet the crew on the blog",
       "specs": [
-        "10 avatars",
+        "9 avatars",
         "Halloween 2026",
         "Neon Pinkoween style"
       ]
@@ -901,21 +901,6 @@
       "height": 512,
       "alt": "Mummy Morning Planner, Halloween costume for Day Planner: a cute mummy holding a pumpkin spice latte and a checklist beside a bat-winged alarm clock",
       "caption": "Mummy Morning Planner: the Halloween 2026 costume for Day Planner.",
-      "lbSet": "halloween-2026"
-    },
-    {
-      "title": "Desanya After Dark: Witching Hour",
-      "group": "halloween-2026",
-      "tag": "Grok Bot · Desanya After Dark",
-      "description": "The coordinator that routes requests to the right assistant and tracks every handoff.",
-      "href": "assets/blog/halloween-crew/grok-bot-after-dark-512.jpg",
-      "image": "assets/blog/halloween-crew/grok-bot-after-dark-512.jpg",
-      "webp": "assets/blog/halloween-crew/grok-bot-after-dark-480.webp",
-      "webpWidth": 480,
-      "width": 512,
-      "height": 512,
-      "alt": "Desanya After Dark: Witching Hour, Halloween costume for Grok Bot · Desanya After Dark: a grey wolf pup in a witch hat conducting a ghost, owl, black cat and bat under a full moon",
-      "caption": "Desanya After Dark: Witching Hour: the Halloween 2026 costume for Grok Bot · Desanya After Dark.",
       "lbSet": "halloween-2026"
     }
   ]

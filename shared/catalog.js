@@ -1,4 +1,4 @@
-/* Canonical prices for the inactive order worker. cart.js must match. */
+/* Canonical prices for the live order worker (desanya-order-api). cart.js must match. */
 export const CATALOG = {
   "ad-landing-basic": {
     "name": "Ad landing page — Basic",

@@ -66,7 +66,7 @@ var DESANYA_LINKS = {
     },
     {
       key: 'threads',
-      label: 'Threads',
+      label: 'Desanya Studio on Threads',
       svg: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.2 3.8c2.8 0 4.7 1.6 5 4l-1.9.3c-.2-1.4-1.4-2.2-3.1-2.2-2 0-3.3 1.3-3.3 3.2 0 .4.1.8.2 1.2-1.3.3-2.1 1.3-2.1 2.6 0 1.6 1.3 2.8 3.2 2.8 1.3 0 2.2-.5 2.7-1.5.3.1.6.1.9.1 1 0 1.8-.6 2-1.6h1.8c-.3 1.9-1.8 3.1-3.8 3.1-.5 0-.9-.1-1.3-.2-.7 1.2-2 1.9-3.6 1.9-2.5 0-4.3-1.7-4.3-4 0-1.7 1-3 2.6-3.5-.1-.4-.2-.8-.2-1.3 0-3 2.3-5.2 5.4-5.2zm.2 9c0 .8-.6 1.3-1.5 1.3s-1.5-.5-1.5-1.3.6-1.3 1.5-1.3 1.5.5 1.5 1.3z"/></svg>'
     },
     {
@@ -76,7 +76,7 @@ var DESANYA_LINKS = {
     },
     {
       key: 'twitch',
-      label: 'Desanya Studio on Twitch',
+      label: 'Duo After Dark on Twitch',
       svg: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0 1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>'
     },
     {
@@ -275,17 +275,86 @@ var DESANYA_LINKS = {
     });
 
     var note = document.querySelector('[data-linkedin-note]');
-    var noteLink = note && note.querySelector('[data-linkedin-link]');
     var linkedin = configuredUrl(DESANYA_LINKS.social && DESANYA_LINKS.social.linkedin);
-    if (note && noteLink) {
+    if (note) {
       if (linkedin) {
-        noteLink.href = linkedin;
+        var slot = note.querySelector('[data-linkedin-slot]');
+        if (slot) {
+          slot.textContent = '';
+          slot.appendChild(document.createTextNode('More skills, roles, and endorsements on '));
+          var link = document.createElement('a');
+          link.href = linkedin;
+          link.rel = 'noopener noreferrer';
+          link.target = '_blank';
+          link.appendChild(document.createTextNode('LinkedIn'));
+          var hidden = document.createElement('span');
+          hidden.className = 'visually-hidden';
+          hidden.textContent = ' (opens in a new tab)';
+          link.appendChild(hidden);
+          slot.appendChild(link);
+          slot.appendChild(document.createTextNode('.'));
+        }
         note.hidden = false;
       } else {
         note.hidden = true;
-        noteLink.removeAttribute('href');
       }
     }
+  }
+
+  function initServiceJump() {
+    var nav = document.querySelector('.service-jump');
+    if (!nav || !('IntersectionObserver' in window)) return;
+    var links = Array.prototype.slice.call(nav.querySelectorAll('a[href^="#"]'));
+    var byCat = {};
+    links.forEach(function (link) {
+      var section = document.getElementById(link.getAttribute('href').slice(1));
+      if (section && section.getAttribute('data-service-cat')) {
+        byCat[section.getAttribute('data-service-cat')] = link;
+      }
+    });
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.price-card[data-service-cat]'));
+    if (!cards.length || !links.length) return;
+    var row = nav.querySelector('ul');
+    var current = null;
+    function activate(link) {
+      if (!link || link === current) return;
+      current = link;
+      links.forEach(function (item) {
+        if (item === link) item.setAttribute('aria-current', 'true');
+        else item.removeAttribute('aria-current');
+      });
+      if (row && row.scrollWidth > row.clientWidth) {
+        var left = link.getBoundingClientRect().left - row.getBoundingClientRect().left + row.scrollLeft - 12;
+        row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      }
+    }
+    function readingLine() {
+      var header = document.querySelector('.site-header');
+      return (header ? header.offsetHeight : 0) + nav.offsetHeight + 48;
+    }
+    function pickCard() {
+      var line = readingLine();
+      var best = null;
+      cards.forEach(function (card) {
+        if (card.hidden) return;
+        if (card.getBoundingClientRect().top <= line) best = card;
+      });
+      if (!best) {
+        cards.forEach(function (card) {
+          if (!card.hidden && !best) best = card;
+        });
+      }
+      return best;
+    }
+    var observer = new IntersectionObserver(function () {
+      var best = pickCard();
+      if (best) activate(byCat[best.getAttribute('data-service-cat')]);
+    }, { rootMargin: '-20% 0px -40% 0px', threshold: [0, 0.25, 0.6] });
+    cards.forEach(function (card) { observer.observe(card); });
+    window.addEventListener('scroll', function () {
+      var best = pickCard();
+      if (best) activate(byCat[best.getAttribute('data-service-cat')]);
+    }, { passive: true });
   }
 
   /* ---------- Gallery lightbox ---------- */
@@ -798,6 +867,7 @@ var DESANYA_LINKS = {
     initCoverflow();
     initGalleryFilters();
     initServiceFilters();
+    initServiceJump();
     initAnalytics();
   }
 
