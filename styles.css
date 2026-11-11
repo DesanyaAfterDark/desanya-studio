@@ -5088,18 +5088,6 @@ html:has(body.page-services) {
   }
 }
 
-.after-dark-avatar {
-  max-width: 16rem;
-  margin: 0 0 1.25rem;
-}
-.after-dark-avatar img {
-  width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-}
-
 .back-to-top-row { margin: 1.25rem 0 0; }
 
 .back-to-top {
