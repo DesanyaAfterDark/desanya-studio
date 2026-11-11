@@ -324,13 +324,25 @@ main img { max-width: 100%; }
 }
 .gallery-group-head { margin-bottom: 0.35rem; }
 
-/* Blog art is a header, not a second page. The real title sits just below. */
-.blog-banner,
-.post-hero-img {
+/* Blog index art is already a wide strip. */
+.blog-banner {
   width: 100%;
   max-height: min(46vh, 420px);
   object-fit: cover;
   object-position: center 42%;
+}
+/* Post headers are 1600×900, with the dragonfly wordmark in the top band.
+   A 420px cover crop was cutting that mark off at desktop width. Keep the
+   top of the frame, and allow enough height that the mark and the
+   illustration still show at 1280px. On a phone the natural 16:9 height
+   stays under this cap. */
+.post-hero-img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: min(80vh, 720px);
+  object-fit: cover;
+  object-position: center top;
 }
 /* The banner sits inside <picture>, so the section is the picture's sibling. */
 .blog-banner + .page-hero,
