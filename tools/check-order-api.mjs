@@ -59,7 +59,7 @@ for (const pair of pairs) {
 }
 expectEqual('catalog matches cart.js', catalogDrift, 0);
 const checkout = readFileSync(new URL('../checkout.html', import.meta.url), 'utf8');
-expectEqual('checkout order api inactive', checkout.includes("var PAYPAL_ORDER_API = '';"), true);
+expectEqual('checkout order api points at the production worker', checkout.includes("var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';"), true);
 expectEqual('checkout stays live mode', checkout.includes("var PAYPAL_MODE = 'live'"), true);
 
 expectEqual('blank api is browser', selectCheckoutMode(''), { mode: 'browser', url: '' });
@@ -264,6 +264,11 @@ expectEqual('foreign origin rejected', evil.status, 403);
 const bare = { ...env(), PAYPAL_CLIENT_SECRET: '' };
 const missing = await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }] }, { 'idempotency-key': IDEM }), bare, fetchImpl);
 expectEqual('missing secret is not configured', missing.status, 503);
+const bareGet = await call(new Request('https://order-api.test/v1/orders', { method: 'GET' }), bare, fetchImpl);
+const bareGetBody = await bareGet.json();
+expectEqual('a bare GET without an allowed origin is rejected', { status: bareGet.status, body: bareGetBody }, { status: 403, body: { error: 'origin_not_allowed' } });
+const badIdem = await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }] }, { 'idempotency-key': 'not-a-uuid' }), bare, fetchImpl);
+expectEqual('invalid idempotency is 400 even when keys are missing', { status: badIdem.status, body: await badIdem.json() }, { status: 400, body: { error: 'invalid_idempotency' } });
 
 expectEqual('capture token is unguessable and not an email', /^[0-9a-f]{64}$/i.test(capturedBody.receiptToken) && !capturedBody.email, true);
 const againBody = await again.json();

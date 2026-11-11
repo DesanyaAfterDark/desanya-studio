@@ -448,10 +448,18 @@ export async function handleRequest(request, env, deps = {}) {
       }
     });
   }
+  if (!origin) return json(403, { error: 'origin_not_allowed' }, '');
+  const posting = request.method === 'POST' && (
+    url.pathname === '/v1/orders' ||
+    /^\/v1\/orders\/[A-Z0-9]+\/capture$/.test(url.pathname)
+  );
+  if (posting) {
+    const idempotencyKey = request.headers.get('idempotency-key') || '';
+    if (!/^[0-9a-f-]{36}$/i.test(idempotencyKey)) return json(400, { error: 'invalid_idempotency' }, origin);
+  }
   const ready = configured(env);
   const ledger = deps.ledger || null;
   if (!ready || !ledger) return json(503, { error: 'not_configured' }, origin);
-  if (!origin) return json(403, { error: 'origin_not_allowed' }, '');
   const receiptMatch = url.pathname.match(/^\/v1\/orders\/([A-Za-z0-9]+)\/receipt$/);
   if (receiptMatch) {
     if (request.method !== 'GET') return json(405, { error: 'method_not_allowed' }, origin);

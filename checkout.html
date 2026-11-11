@@ -1066,11 +1066,9 @@
       sandbox: 'sb',                       // PayPal sandbox placeholder — replace with sandbox client ID
       live: 'AS5MKJS88Z-6tfrb3gvFL2vkKhnjmJYiJTWIZxGWAHuOYVw5AN1_07x82XNkaoIE1MNF4WxcYF0BoG-9'
     };
-    /* Empty until a reviewed worker is deployed and this constant is changed
-       in a later release. Do not put a secret here. An empty value keeps the
-       current browser checkout. A non-empty value that fails does not fall
-       back to a browser-calculated price. */
-    var PAYPAL_ORDER_API = '';
+    /* Production order Worker. Do not put a secret here. A non-empty value
+       that fails does not fall back to a browser-calculated price. */
+    var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';
   </script>
   <script type="module" src="shared/order-client.js?v=4"></script>
   <script type="module" src="shared/receipt-view.js?v=3"></script>

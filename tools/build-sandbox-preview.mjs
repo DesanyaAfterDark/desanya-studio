@@ -50,11 +50,9 @@ const constants = `    var PAYPAL_MODE = 'live'; // 'sandbox' | 'live'
       sandbox: 'sb',                       // PayPal sandbox placeholder — replace with sandbox client ID
       live: '${liveId}'
     };
-    /* Empty until a reviewed worker is deployed and this constant is changed
-       in a later release. Do not put a secret here. An empty value keeps the
-       current browser checkout. A non-empty value that fails does not fall
-       back to a browser-calculated price. */
-    var PAYPAL_ORDER_API = '';`;
+    /* Production order Worker. Do not put a secret here. A non-empty value
+       that fails does not fall back to a browser-calculated price. */
+    var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';`;
 const sandboxConstants = `    var PAYPAL_MODE = 'sandbox';
     var PAYPAL_ORDER_API = (window.DESANYA_SANDBOX_PUBLIC && window.DESANYA_SANDBOX_PUBLIC.orderApi) || '${ORDER_API}';
     var PAYPAL_PUBLIC_CLIENT_ID = (window.DESANYA_SANDBOX_PUBLIC && window.DESANYA_SANDBOX_PUBLIC.paypalClientId) || '';`;
@@ -126,18 +124,18 @@ if (!checkout.includes('order-client.js') || !checkout.includes('receiptPageHref
 writeFileSync(join(outDir, 'checkout.html'), checkout);
 
 let receipt = stripTrackers(readFileSync(join(root, 'receipt/index.html'), 'utf8'));
-if (!receipt.includes("var api = '';")) throw new Error('receipt api constant was not found');
+if (!receipt.includes("var api = 'https://desanya-order-api.desanya-studio.workers.dev';")) throw new Error('receipt api constant was not found');
 receipt = receipt.replace(
   '<script type="module" src="/shared/receipt-view.js?v=3"></script>',
   '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js?v=3"></script>'
 );
 receipt = receipt.replace(
-  `    var api = '';
+  `    var api = 'https://desanya-order-api.desanya-studio.workers.dev';
     document.body.dataset.orderApi = api;`,
   `    var api = (window.DESANYA_SANDBOX_PUBLIC && window.DESANYA_SANDBOX_PUBLIC.orderApi) || '${ORDER_API}';
     document.body.dataset.orderApi = api;`
 );
-if (receipt.includes(liveId) || receipt.includes('PAYPAL_CLIENT_SECRET') || receipt.includes("var api = '';")) {
+if (receipt.includes(liveId) || receipt.includes('PAYPAL_CLIENT_SECRET') || receipt.includes("var api = 'https://desanya-order-api.desanya-studio.workers.dev';")) {
   throw new Error('receipt preview is not sandbox-only');
 }
 writeFileSync(join(outDir, 'receipt/index.html'), receipt);
