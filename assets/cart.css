@@ -98,13 +98,22 @@ body.ds-cart-lock { overflow: hidden; }
   color: var(--text);
 }
 .ds-cart-close {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
   background: transparent;
   border: 0;
+  border-radius: 999px;
   color: var(--text-muted);
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0.25rem 0.5rem;
+  padding: 0;
 }
 .ds-cart-close:hover { color: var(--text); }
 
@@ -155,21 +164,25 @@ body.ds-cart-lock { overflow: hidden; }
 .ds-cart-item-qty {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.15rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  padding: 0.2rem 0.35rem;
+  padding: 0.15rem;
 }
 .ds-cart-item-qty button {
-  width: 1.6rem;
-  height: 1.6rem;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border-strong);
   background: transparent;
   color: var(--text);
-  font-size: 1rem;
+  font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
+  padding: 0;
 }
 .ds-cart-item-qty button:hover { border-color: var(--accent); }
 .ds-cart-item-qty span {
@@ -180,12 +193,22 @@ body.ds-cart-lock { overflow: hidden; }
   font-size: 0.9rem;
 }
 .ds-cart-item-remove {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   background: transparent;
-  border: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
   color: var(--text-dim);
   font-size: 1.3rem;
+  line-height: 1;
   cursor: pointer;
-  padding: 0.2rem;
+  padding: 0;
 }
 .ds-cart-item-remove:hover { color: var(--accent-strong); }
 

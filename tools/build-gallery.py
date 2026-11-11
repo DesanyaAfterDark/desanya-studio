@@ -210,8 +210,7 @@ def card(item, lazy):
     frame = frame_markup(item, lazy)
 
     if item.get("external"):
-        place = "YouTube" if "youtu" in item["external"].lower() else "Instagram"
-        label = f'{item["title"]} on {place}, opens in a new tab'
+        label = f'{item["title"]}, {item["tag"]} (opens in a new tab)'
         body = (
             f'            <a class="gallery-link" href="{esc(item["external"])}" '
             f'target="_blank" rel="noopener" aria-label="{esc(label)}">\n'

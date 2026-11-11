@@ -37,7 +37,7 @@
       "slug": "meet-our-spooky-ai-crew",
       "topic": "ai",
       "date": "2026-10-30",
-      "featured": true,
+      "featured": false,
       "excerpt": "Desanya Studio’s 10 AI helpers dressed up for Halloween 2026. Meet each one, see its costume, and learn the real job it does behind the scenes.",
       "image": "/assets/blog/post-spooky-ai-crew.jpg?v=1",
       "imageWebp": "/assets/blog/post-spooky-ai-crew.webp?v=1",
@@ -49,9 +49,10 @@
       "topic": "google-business-profile",
       "date": "2026-10-05",
       "excerpt": "Your Google Business Profile is free, and it's often the first thing local customers see. How to claim it, complete it, and keep it working in East Tennessee.",
-      "image": "/assets/blog/post-google-business-profile.jpg?v=2",
-      "imageWebp": "/assets/blog/post-google-business-profile.webp?v=2",
-      "imageAlt": "Desanya Studio blog header: Google Business Profile, the free tool most businesses ignore, with a map pin illustration"
+      "image": "/assets/blog/post-google-business-profile.jpg?v=3",
+      "imageWebp": "/assets/blog/post-google-business-profile.webp?v=3",
+      "imageAlt": "Desanya Studio blog header: Google Business Profile, the free tool most businesses ignore, with a map pin illustration",
+      "featured": true
     },
     {
       "title": "SEO basics for East Tennessee businesses",
@@ -59,8 +60,8 @@
       "topic": "seo",
       "date": "2026-10-05",
       "excerpt": "Plain-English local SEO for East Tennessee small businesses: page titles, location pages, Google Business Profile, and consistency, from Knoxville to Chattanooga.",
-      "image": "/assets/blog/post-seo-basics-east-tennessee.jpg?v=2",
-      "imageWebp": "/assets/blog/post-seo-basics-east-tennessee.webp?v=2",
+      "image": "/assets/blog/post-seo-basics-east-tennessee.jpg?v=3",
+      "imageWebp": "/assets/blog/post-seo-basics-east-tennessee.webp?v=3",
       "imageAlt": "Desanya Studio blog header: SEO basics for East Tennessee businesses, with a magnifying glass illustration"
     },
     {
@@ -69,8 +70,8 @@
       "topic": "websites",
       "date": "2026-10-05",
       "excerpt": "Social pages and listings help, but a real website is the one place you own. Here's what it does for an East Tennessee small business, and what it needs.",
-      "image": "/assets/blog/post-why-real-website.jpg?v=2",
-      "imageWebp": "/assets/blog/post-why-real-website.webp?v=2",
+      "image": "/assets/blog/post-why-real-website.jpg?v=3",
+      "imageWebp": "/assets/blog/post-why-real-website.webp?v=3",
       "imageAlt": "Desanya Studio blog header: Why your small business needs a real website, with a browser window illustration"
     },
     {
@@ -79,8 +80,8 @@
       "topic": "websites",
       "date": "2026-10-05",
       "excerpt": "Good website copy is clear before it's clever. A practical guide to headlines, service pages, and calls to action that turn visitors into customers.",
-      "image": "/assets/blog/post-copy-that-converts.jpg?v=2",
-      "imageWebp": "/assets/blog/post-copy-that-converts.webp?v=2",
+      "image": "/assets/blog/post-copy-that-converts.jpg?v=3",
+      "imageWebp": "/assets/blog/post-copy-that-converts.webp?v=3",
       "imageAlt": "Desanya Studio blog header: Writing website copy that converts, with a pen nib illustration"
     }
   ]
