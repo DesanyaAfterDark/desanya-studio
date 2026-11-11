@@ -59,7 +59,7 @@ for (const pair of pairs) {
 }
 expectEqual('catalog matches cart.js', catalogDrift, 0);
 const checkout = readFileSync(new URL('../checkout.html', import.meta.url), 'utf8');
-expectEqual('checkout order api inactive', checkout.includes("var PAYPAL_ORDER_API = '';"), true);
+expectEqual('checkout order api points at the production worker', checkout.includes("var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';"), true);
 expectEqual('checkout stays live mode', checkout.includes("var PAYPAL_MODE = 'live'"), true);
 
 expectEqual('blank api is browser', selectCheckoutMode(''), { mode: 'browser', url: '' });
@@ -87,11 +87,14 @@ function env() {
     ALLOWED_ORIGINS: 'https://desanya.tech'
   };
 }
-function call(request, state, fetchImpl, now) {
+function call(request, state, fetchImpl, now, extra) {
   return handleRequest(request, state, {
     fetch: fetchImpl,
     ledger: state.ledger,
-    now: now || (() => Date.now())
+    now: now || (() => Date.now()),
+    approvalDelays: [0],
+    sleep: async () => {},
+    ...(extra || {})
   });
 }
 function approvedOrder(id, value, customId) {
@@ -261,6 +264,11 @@ expectEqual('foreign origin rejected', evil.status, 403);
 const bare = { ...env(), PAYPAL_CLIENT_SECRET: '' };
 const missing = await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }] }, { 'idempotency-key': IDEM }), bare, fetchImpl);
 expectEqual('missing secret is not configured', missing.status, 503);
+const bareGet = await call(new Request('https://order-api.test/v1/orders', { method: 'GET' }), bare, fetchImpl);
+const bareGetBody = await bareGet.json();
+expectEqual('a bare GET without an allowed origin is rejected', { status: bareGet.status, body: bareGetBody }, { status: 403, body: { error: 'origin_not_allowed' } });
+const badIdem = await call(post('/v1/orders', { items: [{ slug: 'website-basic', qty: 1 }] }, { 'idempotency-key': 'not-a-uuid' }), bare, fetchImpl);
+expectEqual('invalid idempotency is 400 even when keys are missing', { status: badIdem.status, body: await badIdem.json() }, { status: 400, body: { error: 'invalid_idempotency' } });
 
 expectEqual('capture token is unguessable and not an email', /^[0-9a-f]{64}$/i.test(capturedBody.receiptToken) && !capturedBody.email, true);
 const againBody = await again.json();
@@ -492,6 +500,131 @@ expectEqual('mixed receipt shows 900 paid and 99 later', {
 }, { paid: '900.00', paidLine: ['Website — Basic 900.00'], later: '99.00', monthly: ['99.00'] });
 
 resetPayPalTokenCache();
+const delayedPay = scenarioPayPal('DELAYED001', 'CAPDELAY01');
+const delayedState = env();
+const delayedKey = 'a1a1a1a1-a1a1-a1a1-a1a1-a1a1a1a1a1a1';
+const delayedCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': delayedKey }), delayedState, delayedPay.fetch);
+const delayedBody = await delayedCreated.json();
+expectEqual('monthly-only create is a 1.00 deposit', { status: delayedCreated.status, amount: delayedBody.amount, paypal: delayedPay.createBody().purchase_units[0].amount.value }, {
+  status: 201, amount: '1.00', paypal: '1.00'
+});
+let delayedGets = 0;
+const delayedFetch = async (url, init) => {
+  const target = String(url);
+  if (target.endsWith('/v2/checkout/orders/DELAYED001') && (!init.method || init.method === 'GET')) {
+    delayedGets += 1;
+    if (delayedGets >= 2) delayedPay.approve();
+  }
+  return delayedPay.fetch(url, init);
+};
+const delayedCaptured = await call(
+  post('/v1/orders/DELAYED001/capture', {}, { 'idempotency-key': 'b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2', 'order-owner': delayedBody.ownerSecret }),
+  delayedState,
+  delayedFetch,
+  undefined,
+  { approvalDelays: [0, 0] }
+);
+const delayedCaptureBody = await delayedCaptured.json();
+expectEqual('monthly capture waits for PayPal approval after 3DS', {
+  status: delayedCaptured.status,
+  amount: delayedCaptureBody.amount,
+  laterGets: delayedGets,
+  posts: delayedPay.captures()
+}, { status: 200, amount: '1.00', laterGets: 2, posts: 1 });
+
+resetPayPalTokenCache();
+const pendingPay = scenarioPayPal('PENDING001', 'CAPPEND001');
+const pendingState = env();
+const pendingKey = 'c3c3c3c3-c3c3-c3c3-c3c3-c3c3c3c3c3c3';
+const pendingCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': pendingKey }), pendingState, pendingPay.fetch);
+const pendingOwner = (await pendingCreated.json()).ownerSecret;
+let pendingGets = 0;
+const pendingFetch = async (url, init) => {
+  const target = String(url);
+  if (target.endsWith('/v2/checkout/orders/PENDING001') && (!init.method || init.method === 'GET')) {
+    pendingGets += 1;
+    const order = { id: 'PENDING001', status: 'PAYER_ACTION_REQUIRED', intent: 'CAPTURE', purchase_units: [] };
+    return response(order);
+  }
+  return pendingPay.fetch(url, init);
+};
+const pendingCapture = await call(
+  post('/v1/orders/PENDING001/capture', {}, { 'idempotency-key': 'd4d4d4d4-d4d4-d4d4-d4d4-d4d4d4d4d4d4', 'order-owner': pendingOwner }),
+  pendingState,
+  pendingFetch,
+  undefined,
+  { approvalDelays: [0, 0, 0] }
+);
+expectEqual('unready PayPal status is not an amount mismatch', {
+  status: pendingCapture.status,
+  body: await pendingCapture.json(),
+  gets: pendingGets,
+  posts: pendingPay.captures()
+}, { status: 409, body: { error: 'not_approved' }, gets: 3, posts: 0 });
+pendingPay.approve();
+const pendingLater = await call(
+  post('/v1/orders/PENDING001/capture', {}, { 'idempotency-key': 'e5e5e5e5-e5e5-e5e5-e5e5-e5e5e5e5e5e5', 'order-owner': pendingOwner }),
+  pendingState,
+  pendingPay.fetch
+);
+expectEqual('a later approved monthly capture still works after an early not_approved', {
+  status: pendingLater.status,
+  amount: (await pendingLater.json()).amount,
+  posts: pendingPay.captures()
+}, { status: 200, amount: '1.00', posts: 1 });
+
+resetPayPalTokenCache();
+const onePay = scenarioPayPal('ONEDOLLAR1', 'CAPONE0001');
+const oneState = env();
+const oneKey = 'f6f6f6f6-f6f6-f6f6-f6f6-f6f6f6f6f6f6';
+const oneCreated = await call(post('/v1/orders', { items: [{ slug: 'monthly-care', qty: 1 }] }, { 'idempotency-key': oneKey }), oneState, onePay.fetch);
+const oneOwner = (await oneCreated.json()).ownerSecret;
+onePay.approve();
+const oneFetch = async (url, init) => {
+  const res = await onePay.fetch(url, init);
+  if (String(url).endsWith('/v2/checkout/orders/ONEDOLLAR1') && (!init.method || init.method === 'GET')) {
+    const body = await res.clone().json();
+    if (body && body.purchase_units && body.purchase_units[0] && body.purchase_units[0].amount) {
+      body.purchase_units[0].amount.value = '1';
+    }
+    return response(body, res.status);
+  }
+  return res;
+};
+const oneCaptured = await call(
+  post('/v1/orders/ONEDOLLAR1/capture', {}, { 'idempotency-key': 'a7a7a7a7-a7a7-a7a7-a7a7-a7a7a7a7a7a7', 'order-owner': oneOwner }),
+  oneState,
+  oneFetch
+);
+expectEqual('PayPal amount 1 still matches a 1.00 monthly deposit', {
+  status: oneCaptured.status,
+  amount: (await oneCaptured.json()).amount
+}, { status: 200, amount: '1.00' });
+
+let clientTries = 0;
+const clientSleeps = [];
+const clientCapture = await captureServerOrder('https://orders.example.com', 'CLIENTCAP1', {
+  idempotencyKey: 'b8b8b8b8-b8b8-b8b8-b8b8-b8b8b8b8b8b8',
+  expectedAmount: '1.00',
+  ownerSecret: 'ab'.repeat(32),
+  retryDelays: [0, 0, 0],
+  sleep: async (ms) => { clientSleeps.push(ms); },
+  fetchImpl: async () => {
+    clientTries += 1;
+    if (clientTries < 3) return new Response(JSON.stringify({ error: 'not_approved' }), { status: 409, headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({
+      orderId: 'CLIENTCAP1', captureId: 'CLIENTCAPX', status: 'COMPLETED', currency: 'USD', amount: '1.00', receiptToken: 'cd'.repeat(32)
+    }), { status: 200, headers: { 'content-type': 'application/json' } });
+  }
+});
+expectEqual('client retries a 409 not_approved capture', {
+  tries: clientTries,
+  amount: clientCapture.amount,
+  id: clientCapture.captureId
+}, { tries: 3, amount: '1.00', id: 'CLIENTCAPX' });
+
+
+resetPayPalTokenCache();
 const pricePay = scenarioPayPal('SAMEPRICE1', 'CAPSAME001');
 const priceState = env();
 const priceKey = '12121212-3434-5656-7878-909090909090';
@@ -521,10 +654,125 @@ expectEqual('client sends the owner secret as a header, not in the body or addre
   returned: clientOrder.ownerSecret
 }, { header: 'ab'.repeat(32), bodyHasSecret: false, urlHasSecret: false, returned: 'cd'.repeat(32) });
 
+function memorySession() {
+  const map = new Map();
+  return {
+    get length() { return map.size; },
+    key(index) { return [...map.keys()][index] || null; },
+    setItem(key, value) { map.set(String(key), String(value)); },
+    getItem(key) { return map.has(String(key)) ? map.get(String(key)) : null; }
+  };
+}
+const savedSession = globalThis.sessionStorage;
+const blogKey = '46464646-4646-4646-4646-464646464646';
+const blogPay = scenarioPayPal('BLOGORD120', 'CAPBLOG120');
+const blogState = env();
+const blogHeaders = [];
+const blogKeys = [];
+globalThis.sessionStorage = memorySession();
+resetPayPalTokenCache();
+const blogFetch = async (url, init) => {
+  blogHeaders.push(init.headers['order-owner'] || '');
+  blogKeys.push(init.headers['idempotency-key'] || '');
+  return call(new Request('https://order-api.test/v1/orders', {
+    method: 'POST',
+    headers: { origin: 'https://desanya.tech', 'content-type': 'application/json', 'idempotency-key': blogKey, ...(init.headers['order-owner'] ? { 'order-owner': init.headers['order-owner'] } : {}) },
+    body: init.body
+  }), blogState, blogPay.fetch);
+};
+const blogFirst = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+const blogReplay = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('stored owner secret is sent on the next create and does not create again', {
+  amount: blogFirst.amount,
+  replay: blogReplay.orderId,
+  creates: blogPay.creates(),
+  firstHeader: blogHeaders[0],
+  secondHeader: blogHeaders[1] === blogFirst.ownerSecret
+}, { amount: '120.00', replay: 'BLOGORD120', creates: 1, firstHeader: '', secondHeader: true });
+sessionStorage.setItem('desanya_owner_idem_' + blogKey, 'aa'.repeat(32));
+const blogExact = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('exact remembered owner 401 then stored order secret replays', {
+  id: blogExact.orderId,
+  creates: blogPay.creates()
+}, { id: 'BLOGORD120', creates: 1 });
+const orphan = memorySession();
+orphan.setItem('desanya_owner_BLOGORD120', blogFirst.ownerSecret);
+globalThis.sessionStorage = orphan;
+const blogRecovered = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('one saved order secret can resume the same cart without a second PayPal order', {
+  id: blogRecovered.orderId,
+  creates: blogPay.creates()
+}, { id: 'BLOGORD120', creates: 1 });
+globalThis.sessionStorage = memorySession();
+let blogDenied = 0;
+try {
+  await createServerOrder('https://orders.example.com', {
+    items: [{ slug: 'blog-basic', qty: 1 }],
+    idempotencyKey: blogKey,
+    fetchImpl: blogFetch
+  });
+} catch (err) {
+  blogDenied = err.status;
+}
+expectEqual('a repeated create without the owner secret stays 401 and does not create again', {
+  status: blogDenied,
+  creates: blogPay.creates(),
+  sameKey: blogKeys.every((key) => key === blogKey)
+}, { status: 401, creates: 1, sameKey: true });
+const several = memorySession();
+several.setItem('desanya_owner_OTHERORD1', 'ff'.repeat(32));
+several.setItem('desanya_owner_BLOGORD120', blogFirst.ownerSecret);
+several.setItem('desanya_idem_blog-basic:1|', blogKey);
+globalThis.sessionStorage = several;
+const blogReturn = await createServerOrder('https://orders.example.com', {
+  items: [{ slug: 'blog-basic', qty: 1 }],
+  idempotencyKey: blogKey,
+  fetchImpl: blogFetch
+});
+expectEqual('a return visit tries saved order proofs and does not create another order', {
+  id: blogReturn.orderId,
+  creates: blogPay.creates(),
+  sameKey: blogKeys.every((key) => key === blogKey)
+}, { id: 'BLOGORD120', creates: 1, sameKey: true });
+globalThis.sessionStorage = savedSession;
+
+const checkoutSource = readFileSync(new URL('../checkout.html', import.meta.url), 'utf8');
+const createSlice = checkoutSource.slice(checkoutSource.indexOf('createOrder: function'), checkoutSource.indexOf('onApprove: function'));
+const serverCaptureSlice = checkoutSource.slice(checkoutSource.indexOf("if (mode.mode === 'server')", checkoutSource.indexOf('onApprove: function')), checkoutSource.indexOf('return actions.order.capture()'));
+expectEqual('checkout rotates the cart key once after owner recovery is exhausted', createSlice.includes('err.status !== 401') && createSlice.includes('rotateOrderIdempotencyKey(cartForApi)'), true);
+expectEqual('checkout treats a stored capture marker as an already captured order', createSlice.includes("sessionStorage.getItem('desanya_captured_' + created.orderId) === '1'") && createSlice.includes('desanya_last_order'), true);
+expectEqual('checkout records each successful server capture', serverCaptureSlice.includes("sessionStorage.setItem('desanya_captured_' + capture.orderId, '1')"), true);
+expectEqual('checkout forgets the cart key before clearing after capture', serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') >= 0 && serverCaptureSlice.indexOf('forgetOrderIdempotencyKey(window.DesanyaCart)') < serverCaptureSlice.indexOf('window.DesanyaCart.clear()'), true);
 const workerSource = readFileSync(new URL('../worker/src/handler.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../worker/src/ledger.js', import.meta.url), 'utf8')
   + readFileSync(new URL('../shared/receipt-view.js', import.meta.url), 'utf8');
 expectEqual('no email sender was added', /resend|brevo|mailchannels|smtp|receipt_email/i.test(workerSource), false);
+const onErrorSlice = checkoutSource.slice(checkoutSource.indexOf('onError: function'), checkoutSource.indexOf("}).render('#paypal-buttons')"));
+expectEqual('checkout onError logs a sanitized reason and keeps the generic buyer message', {
+  generic: onErrorSlice.includes('Something went wrong with PayPal. Please try again.'),
+  logsMessage: onErrorSlice.includes('err.message'),
+  logsName: onErrorSlice.includes('err.name'),
+  console: onErrorSlice.includes('console.warn'),
+  redactsTokens: onErrorSlice.includes('[redacted]') && onErrorSlice.includes('[A-Za-z0-9_-]{16,}'),
+  noRawDump: !onErrorSlice.includes('JSON.stringify(err)') && !/console\.\w+\(\s*err\s*[,)]/.test(onErrorSlice)
+}, { generic: true, logsMessage: true, logsName: true, console: true, redactsTokens: true, noRawDump: true });
+
 
 if (failures.length) {
   console.error(failures.join('\n'));

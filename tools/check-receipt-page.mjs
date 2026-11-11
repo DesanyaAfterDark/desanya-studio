@@ -200,12 +200,13 @@ const checkout = readFileSync(new URL('../checkout.html', import.meta.url), 'utf
 const css = readFileSync(new URL('../assets/receipt.css', import.meta.url), 'utf8');
 expectEqual('receipt page does not read the browser payment note', page.includes('desanya_last_order'), false);
 expectEqual('receipt page keeps the capability out of the printed address', page.includes('adoptReceiptCapability'), true);
-expectEqual('receipt api constant stays empty', page.includes("var api = '';"), true);
+expectEqual('receipt api points at the production worker', page.includes("var api = 'https://desanya-order-api.desanya-studio.workers.dev';"), true);
 expectEqual('print control is a button', page.includes('id="receipt-print"') && page.includes('type="button"'), true);
 expectEqual('print css hides the site chrome', css.includes('@media print') && css.includes('.desanya-chat') && css.includes('window.print') === false, true);
 expectEqual('browser checkout still uses the thanks note', checkout.includes("window.location.href = 'thanks/#receipt'"), true);
 expectEqual('server checkout hands off to the receipt page', checkout.includes('receiptPageHref'), true);
-expectEqual('checkout api stays empty', checkout.includes("var PAYPAL_ORDER_API = '';"), true);
+expectEqual('checkout api points at the production worker', checkout.includes("var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';"), true);
+expectEqual('order and receipt modules are cache-busted', checkout.includes('shared/order-client.js?v=4') && checkout.includes('shared/receipt-view.js?v=3') && page.includes('/shared/receipt-view.js?v=3'), true);
 
 if (failures.length) {
   console.error(failures.join('\n'));

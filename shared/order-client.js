@@ -77,6 +77,39 @@ function rememberedOwner(orderId) {
   }
 }
 
+function rememberIdemOwner(idempotencyKey, secret) {
+  if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || '')) || !/^[0-9a-f]{64}$/i.test(String(secret || ''))) return;
+  if (typeof sessionStorage === 'undefined') return;
+  try { sessionStorage.setItem('desanya_owner_idem_' + idempotencyKey, secret); } catch { /* private mode */ }
+}
+
+function rememberedIdemOwner(idempotencyKey) {
+  if (typeof sessionStorage === 'undefined') return '';
+  try {
+    const secret = sessionStorage.getItem('desanya_owner_idem_' + idempotencyKey) || '';
+    return /^[0-9a-f]{64}$/i.test(secret) ? secret : '';
+  } catch {
+    return '';
+  }
+}
+
+function storedOrderOwners() {
+  if (typeof sessionStorage === 'undefined' || typeof sessionStorage.length !== 'number') return [];
+  const found = [];
+  try {
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i) || '';
+      if (!key.startsWith('desanya_owner_') || key.startsWith('desanya_owner_idem_')) continue;
+      const secret = sessionStorage.getItem(key) || '';
+      if (/^[0-9a-f]{64}$/i.test(secret) && !found.includes(secret)) found.push(secret);
+      if (found.length >= 20) break;
+    }
+  } catch {
+    return [];
+  }
+  return found;
+}
+
 async function postJson(url, idempotencyKey, body, fetchImpl, extraHeaders) {
   const response = await fetchImpl(url, {
     method: 'POST',
@@ -97,6 +130,8 @@ async function postJson(url, idempotencyKey, body, fetchImpl, extraHeaders) {
   if (!response.ok) {
     const error = new Error('order_api_' + response.status);
     error.status = response.status;
+    const code = parsed && typeof parsed.error === 'string' ? parsed.error : '';
+    if (/^[a-z_]{1,40}$/.test(code)) error.code = code;
     throw error;
   }
   return parsed;
@@ -108,29 +143,98 @@ export async function createServerOrder(baseUrl, { items, discountCode, idempote
   if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || ''))) throw new Error('order_api_idempotency');
   const payload = { items };
   if (discountCode) payload.discountCode = discountCode;
-  const parsed = await postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(ownerSecret));
+  const exact = ownerSecret || rememberedIdemOwner(idempotencyKey);
+  const post = (secret) => postJson(mode.url + '/v1/orders', idempotencyKey, payload, fetchImpl, ownerHeader(secret));
+  const tryOwners = async (err) => {
+    for (const candidate of storedOrderOwners()) {
+      if (candidate === exact) continue;
+      try {
+        return { parsed: await post(candidate), used: candidate };
+      } catch (retryErr) {
+        if (retryErr.status !== 401) throw retryErr;
+      }
+    }
+    throw err;
+  };
+  let parsed;
+  let used = exact;
+  if (exact) {
+    try {
+      parsed = await post(exact);
+    } catch (err) {
+      if (err.status !== 401) throw err;
+      const recovered = await tryOwners(err);
+      parsed = recovered.parsed;
+      used = recovered.used;
+    }
+  } else {
+    try {
+      parsed = await post('');
+      used = '';
+    } catch (err) {
+      if (err.status !== 401) throw err;
+      const recovered = await tryOwners(err);
+      parsed = recovered.parsed;
+      used = recovered.used;
+    }
+  }
   const order = readServerOrder(parsed);
   if (!order) throw new Error('order_api_bad_response');
-  if (order.ownerSecret) rememberOwner(order.orderId, order.ownerSecret);
+  const secret = order.ownerSecret || used;
+  if (secret) {
+    rememberOwner(order.orderId, secret);
+    rememberIdemOwner(idempotencyKey, secret);
+  }
   return order;
 }
 
-export async function captureServerOrder(baseUrl, orderId, { idempotencyKey, expectedAmount, ownerSecret, fetchImpl = fetch }) {
+const RETRYABLE_CAPTURE_ERRORS = new Set(['not_approved', 'capture_in_progress']);
+
+function defaultCaptureRetryDelays() {
+  return [0, 600, 1200, 2000, 2500];
+}
+
+export async function captureServerOrder(baseUrl, orderId, {
+  idempotencyKey,
+  expectedAmount,
+  ownerSecret,
+  fetchImpl = fetch,
+  retryDelays,
+  sleep
+} = {}) {
   const mode = selectCheckoutMode(baseUrl);
   if (mode.mode !== 'server') throw new Error('order_api_not_configured');
   if (!/^[A-Z0-9]+$/.test(String(orderId || ''))) throw new Error('order_api_order');
   if (!/^[0-9a-f-]{36}$/i.test(String(idempotencyKey || ''))) throw new Error('order_api_idempotency');
   const secret = ownerSecret || rememberedOwner(orderId);
-  const parsed = await postJson(
-    mode.url + '/v1/orders/' + encodeURIComponent(orderId) + '/capture',
-    idempotencyKey,
-    {},
-    fetchImpl,
-    ownerHeader(secret)
-  );
-  const capture = readServerCapture(parsed, expectedAmount);
-  if (!capture) throw new Error('order_api_amount_mismatch');
-  return capture;
+  const delays = Array.isArray(retryDelays) ? retryDelays : defaultCaptureRetryDelays();
+  const list = delays.length ? delays : [0];
+  const wait = typeof sleep === 'function' ? sleep : (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  let lastError = new Error('order_api_bad_response');
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] > 0) await wait(list[i]);
+    try {
+      const parsed = await postJson(
+        mode.url + '/v1/orders/' + encodeURIComponent(orderId) + '/capture',
+        idempotencyKey,
+        {},
+        fetchImpl,
+        ownerHeader(secret)
+      );
+      const capture = readServerCapture(parsed, expectedAmount);
+      if (!capture) {
+        const mismatch = new Error('order_api_amount_mismatch');
+        mismatch.code = 'amount_mismatch';
+        throw mismatch;
+      }
+      return capture;
+    } catch (err) {
+      lastError = err;
+      const retryable = err && err.status === 409 && RETRYABLE_CAPTURE_ERRORS.has(err.code);
+      if (!retryable || i === list.length - 1) throw err;
+    }
+  }
+  throw lastError;
 }
 
 if (typeof window !== 'undefined') {

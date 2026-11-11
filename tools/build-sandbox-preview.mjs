@@ -50,11 +50,9 @@ const constants = `    var PAYPAL_MODE = 'live'; // 'sandbox' | 'live'
       sandbox: 'sb',                       // PayPal sandbox placeholder — replace with sandbox client ID
       live: '${liveId}'
     };
-    /* Empty until a reviewed worker is deployed and this constant is changed
-       in a later release. Do not put a secret here. An empty value keeps the
-       current browser checkout. A non-empty value that fails does not fall
-       back to a browser-calculated price. */
-    var PAYPAL_ORDER_API = '';`;
+    /* Production order Worker. Do not put a secret here. A non-empty value
+       that fails does not fall back to a browser-calculated price. */
+    var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';`;
 const sandboxConstants = `    var PAYPAL_MODE = 'sandbox';
     var PAYPAL_ORDER_API = (window.DESANYA_SANDBOX_PUBLIC && window.DESANYA_SANDBOX_PUBLIC.orderApi) || '${ORDER_API}';
     var PAYPAL_PUBLIC_CLIENT_ID = (window.DESANYA_SANDBOX_PUBLIC && window.DESANYA_SANDBOX_PUBLIC.paypalClientId) || '';`;
@@ -126,18 +124,18 @@ if (!checkout.includes('order-client.js') || !checkout.includes('receiptPageHref
 writeFileSync(join(outDir, 'checkout.html'), checkout);
 
 let receipt = stripTrackers(readFileSync(join(root, 'receipt/index.html'), 'utf8'));
-if (!receipt.includes("var api = '';")) throw new Error('receipt api constant was not found');
+if (!receipt.includes("var api = 'https://desanya-order-api.desanya-studio.workers.dev';")) throw new Error('receipt api constant was not found');
 receipt = receipt.replace(
-  '<script type="module" src="/shared/receipt-view.js"></script>',
-  '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js"></script>'
+  '<script type="module" src="/shared/receipt-view.js?v=3"></script>',
+  '<script src="/sandbox-public-config.js"></script>\n  <script type="module" src="/shared/receipt-view.js?v=3"></script>'
 );
 receipt = receipt.replace(
-  `    var api = '';
+  `    var api = 'https://desanya-order-api.desanya-studio.workers.dev';
     document.body.dataset.orderApi = api;`,
   `    var api = (window.DESANYA_SANDBOX_PUBLIC && window.DESANYA_SANDBOX_PUBLIC.orderApi) || '${ORDER_API}';
     document.body.dataset.orderApi = api;`
 );
-if (receipt.includes(liveId) || receipt.includes('PAYPAL_CLIENT_SECRET') || receipt.includes("var api = '';")) {
+if (receipt.includes(liveId) || receipt.includes('PAYPAL_CLIENT_SECRET') || receipt.includes("var api = 'https://desanya-order-api.desanya-studio.workers.dev';")) {
   throw new Error('receipt preview is not sandbox-only');
 }
 writeFileSync(join(outDir, 'receipt/index.html'), receipt);
@@ -207,6 +205,8 @@ This preview was packed from git ${commit}. It does not deploy the worker.
 4. \`orderApi\` is already \`https://desanya-order-api-sandbox.desanya-studio.workers.dev\`.
 
 The checkout page reads that file in the browser. While \`paypalClientId\` is empty, the page says NOT READY and does not load the PayPal script.
+
+A new cart create does not send an owner secret. The worker returns one once. A later create for a cart this worker already accepted sends the secret stored for that cart, or tries the owner secrets already saved in this browser after a 401. The idempotency key is not replaced. If none of those secrets match, the result stays 401 and no second PayPal order is started.
 
 ## Worker settings this browser needs
 

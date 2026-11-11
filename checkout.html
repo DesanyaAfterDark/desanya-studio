@@ -1066,14 +1066,12 @@
       sandbox: 'sb',                       // PayPal sandbox placeholder — replace with sandbox client ID
       live: 'AS5MKJS88Z-6tfrb3gvFL2vkKhnjmJYiJTWIZxGWAHuOYVw5AN1_07x82XNkaoIE1MNF4WxcYF0BoG-9'
     };
-    /* Empty until a reviewed worker is deployed and this constant is changed
-       in a later release. Do not put a secret here. An empty value keeps the
-       current browser checkout. A non-empty value that fails does not fall
-       back to a browser-calculated price. */
-    var PAYPAL_ORDER_API = '';
+    /* Production order Worker. Do not put a secret here. A non-empty value
+       that fails does not fall back to a browser-calculated price. */
+    var PAYPAL_ORDER_API = 'https://desanya-order-api.desanya-studio.workers.dev';
   </script>
-  <script type="module" src="shared/order-client.js"></script>
-  <script type="module" src="shared/receipt-view.js"></script>
+  <script type="module" src="shared/order-client.js?v=4"></script>
+  <script type="module" src="shared/receipt-view.js?v=3"></script>
   <script>
     (function () {
       var mode = (typeof PAYPAL_MODE !== 'undefined' && PAYPAL_MODE === 'live') ? 'live' : 'sandbox';
@@ -1226,10 +1224,14 @@
         return { name: name, email: email };
       }
 
-      function orderIdempotencyKey(cart) {
+      function orderIdempotencyName(cart) {
         var raw = cart.getItems().map(function (item) { return item.slug + ':' + item.qty; }).sort().join('|');
         var code = cart.getDiscountCode ? cart.getDiscountCode() : '';
-        var name = 'desanya_idem_' + raw + '|' + code;
+        return 'desanya_idem_' + raw + '|' + code;
+      }
+
+      function orderIdempotencyKey(cart) {
+        var name = orderIdempotencyName(cart);
         try {
           var existing = sessionStorage.getItem(name);
           if (existing) return existing;
@@ -1239,6 +1241,16 @@
         } catch (e) {
           return crypto.randomUUID();
         }
+      }
+
+      function forgetOrderIdempotencyKey(cart) {
+        try { sessionStorage.removeItem(orderIdempotencyName(cart)); } catch (e) {}
+      }
+
+      function rotateOrderIdempotencyKey(cart) {
+        var created = crypto.randomUUID();
+        try { sessionStorage.setItem(orderIdempotencyName(cart), created); } catch (e) {}
+        return created;
       }
 
       function configuredOrderApi() {
@@ -1308,11 +1320,32 @@
             }
             if (mode.mode === 'server') {
               var cartForApi = window.DesanyaCart;
-              var lines = cartForApi.getItems().map(function (item) { return { slug: item.slug, qty: item.qty }; });
-              return window.DesanyaOrderClient.createServerOrder(mode.url, {
-                items: lines,
-                discountCode: cartForApi.getDiscountCode ? cartForApi.getDiscountCode() : '',
-                idempotencyKey: orderIdempotencyKey(cartForApi)
+              var rotated = false;
+              function placeOrder(key) {
+                var lines = cartForApi.getItems().map(function (item) { return { slug: item.slug, qty: item.qty }; });
+                return window.DesanyaOrderClient.createServerOrder(mode.url, {
+                  items: lines,
+                  discountCode: cartForApi.getDiscountCode ? cartForApi.getDiscountCode() : '',
+                  idempotencyKey: key
+                });
+              }
+              function alreadyCaptured(created) {
+                try {
+                  if (sessionStorage.getItem('desanya_captured_' + created.orderId) === '1') return true;
+                  var saved = JSON.parse(sessionStorage.getItem('desanya_last_order') || 'null');
+                  return !!(saved && saved.orderId === created.orderId && saved.captureId);
+                } catch (e) {
+                  return false;
+                }
+              }
+              return placeOrder(orderIdempotencyKey(cartForApi)).then(function (created) {
+                if (!alreadyCaptured(created) || rotated) return created;
+                rotated = true;
+                return placeOrder(rotateOrderIdempotencyKey(cartForApi));
+              }).catch(function (err) {
+                if (!err || err.status !== 401 || rotated) throw err;
+                rotated = true;
+                return placeOrder(rotateOrderIdempotencyKey(cartForApi));
               }).then(function (created) {
                 window.__desanyaExpectedAmount = created.amount;
                 return created.orderId;
@@ -1379,6 +1412,7 @@
                 idempotencyKey: captureKey,
                 expectedAmount: window.__desanyaExpectedAmount
               }).then(function (capture) {
+                try { sessionStorage.setItem('desanya_captured_' + capture.orderId, '1'); } catch (e) {}
                 try {
                   if (window.gtag) {
                     window.gtag('event', 'purchase', {
@@ -1394,6 +1428,7 @@
                   showOrderError('Payment may have completed, but this browser could not store the note. Check PayPal before ordering again. Your cart is still here.');
                   return;
                 }
+                forgetOrderIdempotencyKey(window.DesanyaCart);
                 window.DesanyaCart.clear();
                 var receiptHref = window.DesanyaReceipt && capture.receiptToken
                   ? window.DesanyaReceipt.receiptPageHref(capture.orderId, capture.receiptToken)
@@ -1403,8 +1438,9 @@
                   return;
                 }
                 window.location.href = receiptHref;
-              }).catch(function () {
-                showOrderError('The order service did not confirm a completed USD payment. Your cart is still here. This page will not report a browser-priced success.');
+              }).catch(function (err) {
+                var code = err && /^[a-z_]{1,40}$/.test(err.code) ? err.code : '';
+                showOrderError('The order service did not confirm a completed USD payment. Your cart is still here.' + (code ? ' (' + code + ')' : '') + ' This page will not report a browser-priced success.');
               });
             }
             return actions.order.capture().then(function (details) {
@@ -1441,10 +1477,17 @@
             err.textContent = 'Payment canceled. Your cart is still here.';
             err.hidden = false;
           },
-          onError: function () {
-            var err = document.getElementById('checkout-error');
-            err.textContent = 'Something went wrong with PayPal. Please try again.';
-            err.hidden = false;
+          onError: function (err) {
+            var box = document.getElementById('checkout-error');
+            box.textContent = 'Something went wrong with PayPal. Please try again.';
+            box.hidden = false;
+            try {
+              var name = (err && typeof err.name === 'string') ? err.name : '';
+              var message = (err && typeof err.message === 'string') ? err.message : '';
+              name = name.replace(/[A-Za-z0-9_-]{16,}/g, '[redacted]').slice(0, 80);
+              message = message.replace(/[A-Za-z0-9_-]{16,}/g, '[redacted]').slice(0, 200);
+              console.warn('PayPal onError', { name: name || 'Error', message: message || 'no message' });
+            } catch (ignore) {}
           }
         }).render('#paypal-buttons');
       }

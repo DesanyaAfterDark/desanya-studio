@@ -38,7 +38,7 @@ ANCHORS = (
     "contact",
 )
 HASHES = {
-    "createOrder": "269d559cca057b71bff50ea55e9ae7bd18f232023e879d585636b9ba422d4d32",
+    "createOrder": "ba13e609db71df3ad9e09a09f94dac468d073b6642654863e6ab42dd6f194319",
     "rushAmount": "49887eccfa56b65a3f7fb136519c17332fb091a936d2beae73b05719b5f70b62",
     "getPayableTotal": "83b2201d0b805aec5b6fd5ff6268eeb25015e3b665701809e02e0df8bfd71c5c",
     "discountAmount": "24bc5405c1a6a62f26147a2d8a3c4b38cfd3ec8bfb1d17ebfb3a86f760c4bba8",
