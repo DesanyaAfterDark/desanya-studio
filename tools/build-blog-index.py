@@ -79,9 +79,10 @@ def card(post, lazy):
     )
 
 
-def hero(post):
+def hero(post, anchor=""):
+    anchor_attr = f' id="{esc(anchor)}"' if anchor else ""
     return (
-        '        <section class="featured-story" aria-labelledby="featured-heading">\n'
+        f'        <section class="featured-story"{anchor_attr} aria-labelledby="featured-heading">\n'
         '          <h2 id="featured-heading" class="featured-story-label">Featured story</h2>\n'
         f'          <a class="post-card post-card--hero" href="/blog/{esc(post["slug"])}/">\n'
         "            <picture>\n"
@@ -149,8 +150,18 @@ def index_html(topics, posts):
             key=lambda post: post["title"].casefold(),
         )
     featured = [post for post in posts if post.get("featured")]
+    featured_slugs = {post["slug"] for post in featured}
+    schema_groups = [
+        (topic, list(by_topic[topic["id"]]))
+        for topic in topics
+        if by_topic[topic["id"]]
+    ]
+    for group in by_topic.values():
+        group[:] = [post for post in group if post["slug"] not in featured_slugs]
+    visible = [topic for topic in topics if by_topic[topic["id"]]]
     for post in featured:
-        parts.append(hero(post))
+        anchor = post["topic"] if post["topic"] not in {topic["id"] for topic in visible} else ""
+        parts.append(hero(post, anchor))
     newest = [post for post in newest if not post.get("featured")]
     if newest:
         parts.append(
@@ -175,8 +186,7 @@ def index_html(topics, posts):
 
     list_items = []
     position = 1
-    for topic in visible:
-        group = by_topic[topic["id"]]
+    for _topic, group in schema_groups:
         for post in group:
             list_items.append(
                 "      {\n"
@@ -187,6 +197,8 @@ def index_html(topics, posts):
                 "      }"
             )
             position += 1
+    for topic in visible:
+        group = by_topic[topic["id"]]
         parts.append(
             f'        <section class="topic-group" id="{esc(topic["id"])}" aria-labelledby="topic-{esc(topic["id"])}">\n'
             '          <header class="topic-group-head">\n'

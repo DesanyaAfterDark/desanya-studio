@@ -40,11 +40,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png?v=5">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="assets/site.webmanifest?v=5">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="assets/site.min.css?v=38">
+  <link rel="stylesheet" href="assets/site.min.css?v=39">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -840,7 +836,17 @@
       <div class="container">
         <header class="group-header">
           <h2 id="packages-heading">Packages</h2>
-          <p class="service-shop-note">The outlined tier is the balanced pick. Add to cart, then pay with PayPal. Esports packages are not in the cart yet — request those on the contact form.</p>
+          <p class="service-shop-note">The outlined tier is the balanced pick. Add to cart, then pay with PayPal. On a small screen, the other tiers stay under See all tiers, and their prices stay on that control.</p>
+          <nav class="service-jump" aria-label="Package categories">
+            <ul>
+              <li><a href="#ai">AI &amp; search <span>from $150</span></a></li>
+              <li><a href="#blog">Content &amp; copy <span>from $60</span></a></li>
+              <li><a href="#brand">Design &amp; brand <span>from $75</span></a></li>
+              <li><a href="#gbp">Marketing &amp; local <span>from $150</span></a></li>
+              <li><a href="#ad-landing">Websites <span>from $99</span></a></li>
+            </ul>
+          </nav>
+          <p class="promo-notice" data-discount-promo hidden>November 27–30, 2026 (Eastern time): 10% off selected one-time items at checkout. That covers the brand refresh kit, the review generation kit, SEO &amp; Google setup, and the three website tiers. List prices stay the same. Enter <strong>BLACKFRIDAY26</strong>.</p>
         </header>
         <nav class="gallery-filters service-filters" aria-label="Filter packages by category" data-service-filters>
           <button type="button" data-filter="all" aria-pressed="true">All</button>
@@ -875,7 +881,7 @@
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Standard</li><li>A form and analytics</li><li>One A/B variant of the page</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-landing-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $400 · Premium $900</span></summary></details>
           
           
         </article><article class="price-card" id="ai" data-service-cat="ai">
@@ -901,7 +907,7 @@
             <p class="tier-meta">14-day delivery · 2 revisions</p>
             <ul class="price-list"><li>FAQ chatbot</li><li>Two workflow automations</li><li>Staff training notes</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-setup-premium">Add to cart</button>
-          </div></div><h4 class="price-pair-label">Managing</h4><div class="tier-grid"><div class="tier">
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $400 · Premium $1,200</span></summary></details><h4 class="price-pair-label">Managing</h4><div class="tier-grid"><div class="tier">
             <p class="tier-name">Basic</p>
             <p class="price"><span class="price-amount">$150</span><span class="price-unit">/mo</span></p>
             <p class="tier-meta">Monthly · 1 tweak round</p>
@@ -920,7 +926,7 @@
             <p class="tier-meta">Monthly · tweaks plus a flow check</p>
             <ul class="price-list"><li>Ongoing answer and prompt tweaks</li><li>One workflow check</li><li>You approve before changes go live</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-managing-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $150/mo · Premium $250/mo</span></summary></details>
           <p class="price-more"><a class="text-link" href="ai-for-small-business.html">AI for small business <span aria-hidden="true">→</span></a></p>
           
         </article><article class="price-card" id="ai-search" data-service-cat="ai">
@@ -946,7 +952,7 @@
             <p class="tier-meta">7-day delivery · 1 revision</p>
             <ul class="price-list"><li>Everything in Standard</li><li>Fixes applied on a GitHub Pages site</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ai-search-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $150 · Premium $500</span></summary></details>
           
           
         </article><article class="price-card" id="blog" data-service-cat="content">
@@ -972,7 +978,7 @@
             <p class="tier-meta">4 posts a month · 1 revision each</p>
             <ul class="price-list"><li>Four Standard posts each month</li><li>Featured image on each</li><li>You approve before publish</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="blog-monthly">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $120 · Premium $700/mo</span></summary></details>
           
           
         </article><article class="price-card" id="brand" data-service-cat="design">
@@ -1011,7 +1017,7 @@
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>30 templates</li><li>Canva brand kit setup</li><li>Canva link included</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="canva-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $150 · Premium $400</span></summary></details>
           
           
         </article><article class="price-card" id="email" data-service-cat="content">
@@ -1037,14 +1043,38 @@
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Standard</li><li>Setup in your free-tier email tool</li><li>A signup form</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="email-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $125 · Premium $600</span></summary></details>
           
           
         </article><article class="price-card" id="esports" data-service-cat="design">
           <h3>Esports &amp; Gaming</h3>
           <p class="price-from">From $75</p>
-          <p class="price-card-desc">Custom Twitch overlays, YouTube gaming banners, Twitch emotes, and esports mascot logos. These packages are not in the cart yet.</p>
-          <p class="price-cta"><a class="btn btn-primary btn-small" href="contact.html#order">Request a quote</a></p>
+          <p class="price-card-desc">Custom Twitch overlays, YouTube gaming banners, Twitch emotes, and esports mascot logos.</p>
+          <div class="tier-grid"><div class="tier">
+            <p class="tier-name">Starter</p>
+            <p class="price"><span class="price-amount">$75</span></p>
+            <p class="tier-meta">Banners and panels</p>
+            <ul class="price-list"><li>Twitch or YouTube gaming banner</li><li>Offline screen</li><li>Info panels</li></ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-starter">Add to cart</button>
+          </div><div class="tier">
+            <p class="tier-name">Stream Pack</p>
+            <p class="price"><span class="price-amount">$150</span></p>
+            <p class="tier-meta">Overlays and alerts</p>
+            <ul class="price-list"><li>Stream overlay design for the gameplay frame</li><li>Starting, BRB, and ending screens</li><li>Alerts</li></ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-stream">Add to cart</button>
+          </div><div class="tier">
+            <p class="tier-name">Character Pack</p>
+            <p class="price"><span class="price-amount">$200</span></p>
+            <p class="tier-meta">Mascot logo and emotes</p>
+            <ul class="price-list"><li>Esports mascot logo</li><li>Six Twitch emotes</li><li>Subscriber badges</li></ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-character">Add to cart</button>
+          </div><div class="tier">
+            <p class="tier-name">Full Brand</p>
+            <p class="price"><span class="price-amount">$375</span></p>
+            <p class="tier-meta">The full system</p>
+            <ul class="price-list"><li>Starter, Stream Pack, and Character Pack</li><li>Animated stinger</li><li>One-page brand guide</li></ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-full">Add to cart</button>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Stream Pack $150 · Character Pack $200 · Full Brand $375</span></summary></details>
           <p class="price-more"><a class="text-link" href="esports-gaming/">Esports &amp; Gaming <span aria-hidden="true">→</span></a></p>
         </article><article class="price-card" id="gbp" data-service-cat="marketing">
           <h3>Google Business Profile tune-up</h3>
@@ -1069,7 +1099,7 @@
             <p class="tier-meta">10-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Everything in Standard</li><li>30 days of Google Posts</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="gbp-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $150 · Premium $400</span></summary></details>
           <p class="price-more"><a class="text-link" href="local-seo-google-business-profile.html">Local SEO &amp; Google Business Profile <span aria-hidden="true">→</span></a></p>
           
         </article><article class="price-card" id="care" data-service-cat="websites">
@@ -1088,7 +1118,7 @@
             <p class="tier-meta">Monthly</p>
             <ul class="price-list"><li>Up to 2 hours of edits</li><li>Uptime check and backup</li><li>One Google Business Profile post</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="monthly-care-plus">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Plus $179/mo</span></summary></details>
           
           
         </article><article class="price-card" id="photo" data-service-cat="design">
@@ -1107,7 +1137,7 @@
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Up to 40 photos</li><li>Cleanup and gallery layout</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="photo-standard">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Standard $300</span></summary></details>
           
           
         </article><article class="price-card" id="deck" data-service-cat="design">
@@ -1133,7 +1163,7 @@
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Up to 25 slides</li><li>Speaker notes</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="deck-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $150 · Premium $500</span></summary></details>
           
           
         </article><article class="price-card" id="descriptions" data-service-cat="content">
@@ -1159,7 +1189,7 @@
             <p class="tier-meta">6-day delivery · 1 revision</p>
             <ul class="price-list"><li>30 descriptions</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="descriptions-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $60 · Premium $275</span></summary></details>
           
           
         </article><article class="price-card" id="reels" data-service-cat="design">
@@ -1185,7 +1215,7 @@
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>10 Reels or Shorts</li><li>Captions and a branded end card</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="reels-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $75 · Premium $550</span></summary></details>
           
           
         </article><article class="price-card" id="review" data-service-cat="marketing">
@@ -1217,7 +1247,7 @@
             <p class="tier-meta">Monthly report</p>
             <ul class="price-list"><li>Listing updates</li><li>Visibility checks</li><li>A short monthly report</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="seo-managing">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Managing $450/mo</span></summary></details>
           <p class="price-more"><a class="text-link" href="local-seo-google-business-profile.html">Local SEO &amp; Google Business Profile <span aria-hidden="true">→</span></a></p>
           
         </article><article class="price-card" id="training" data-service-cat="websites">
@@ -1236,7 +1266,7 @@
             <p class="tier-meta">Two sessions</p>
             <ul class="price-list"><li>Two remote sessions</li><li>Written notes</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="training-standard">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Standard $225</span></summary></details>
           
           
         </article><article class="price-card" id="ad-copy" data-service-cat="content">
@@ -1262,7 +1292,7 @@
             <p class="tier-meta">6-day delivery · 2 revisions</p>
             <ul class="price-list"><li>3 ad sets</li><li>A landing-page copy tweak</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="ad-copy-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $100 · Premium $350</span></summary></details>
           
           
         </article><article class="price-card" id="social" data-service-cat="marketing">
@@ -1294,7 +1324,7 @@
             <p class="tier-meta">Posts, Reels, and light engagement</p>
             <ul class="price-list"><li>Everything in Standard</li><li>Reels</li><li>Light engagement</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="social-managing-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $350/mo · Premium $850/mo</span></summary></details>
           <p class="price-more"><a class="text-link" href="social-media-management.html">Social media management <span aria-hidden="true">→</span></a></p>
           
         </article><article class="price-card" id="website" data-service-cat="websites">
@@ -1320,7 +1350,7 @@
             <p class="tier-meta">21-day delivery · 3 revisions</p>
             <ul class="price-list"><li>Up to 10 pages</li><li>Blog setup</li><li>Page copy included</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="website-premium">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Basic $900 · Premium $2,500</span></summary></details>
           <p class="price-more"><a class="text-link" href="knoxville-web-design.html">Knoxville web design <span aria-hidden="true">→</span></a></p>
           
         </article><article class="price-card" id="copy" data-service-cat="content">
@@ -1339,11 +1369,12 @@
             <p class="tier-meta">7-day delivery · 2 revisions</p>
             <ul class="price-list"><li>Copy for up to 3 pages</li><li>Headlines and calls to action</li></ul>
             <button type="button" class="btn btn-primary btn-small" data-add-to-cart="copy-standard">Add to cart</button>
-          </div></div>
+          </div></div><details class="tier-more"><summary>See all tiers <span class="tier-more-prices">Standard $400</span></summary></details>
           
           
         </article>
         </div>
+        <p class="back-to-top-row"><a class="back-to-top" href="#main">Back to top</a></p>
       </div>
     </section>
 
@@ -1574,10 +1605,10 @@
     </div>
 
     <div class="container footer-bottom">
-      <p class="footer-privacy">Privacy: forms are emailed through FormSubmit and are not stored on this site. Google Analytics, fonts, and checkout use your browser as described on the <a href="privacy.html">privacy page</a>.</p>
+      <p class="footer-privacy">Privacy: forms are emailed through FormSubmit and are not stored on this site. Google Analytics and checkout use your browser as described on the <a href="privacy.html">privacy page</a>. Fonts are files on this site.</p>
       <p class="footer-copy">&copy; <span data-year>2026</span> Desanya Studio</p>
     </div>
-    <script src="assets/cart.js?v=9" defer></script>
+    <script src="assets/cart.js?v=10" defer></script>
   </footer>
   <!-- /@partial:footer -->
 
@@ -1688,6 +1719,10 @@
               <option value="Email newsletter template — Basic $125" data-slug="email-basic">Email newsletter template — Basic $125</option>
               <option value="Email newsletter template — Standard $350" data-slug="email-standard">Email newsletter template — Standard $350</option>
               <option value="Email newsletter template — Premium $600" data-slug="email-premium">Email newsletter template — Premium $600</option>
+              <option value="Esports — Starter $75" data-slug="esports-starter">Esports — Starter $75</option>
+              <option value="Esports — Stream Pack $150" data-slug="esports-stream">Esports — Stream Pack $150</option>
+              <option value="Esports — Character Pack $200" data-slug="esports-character">Esports — Character Pack $200</option>
+              <option value="Esports — Full Brand $375" data-slug="esports-full">Esports — Full Brand $375</option>
               <option value="Extra page $200" data-slug="extra-page">Extra page $200</option>
               <option value="Extra revision round $40" data-slug="extra-revision">Extra revision round $40</option>
               <option value="Google Business Profile tune-up — Basic $150" data-slug="gbp-basic">Google Business Profile tune-up — Basic $150</option>
@@ -1751,7 +1786,7 @@
     </div>
   </div>
 
-  <script src="site.js?v=25" defer></script>
+  <script src="site.js?v=26" defer></script>
   <script>
     window.addEventListener('load', function () {
       var s = document.createElement('script');

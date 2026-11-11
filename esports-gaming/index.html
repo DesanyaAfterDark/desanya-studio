@@ -41,11 +41,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="/assets/favicon-512.png?v=5">
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=5">
   <link rel="manifest" href="/assets/site.webmanifest?v=5">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"></noscript>
-  <link rel="stylesheet" href="/assets/site.min.css?v=38">
+  <link rel="stylesheet" href="/assets/site.min.css?v=39">
 <!-- @partial:business-jsonld -->
 <script type="application/ld+json">
 {
@@ -716,7 +712,7 @@
         "name": "How much does a custom stream package cost?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Starter is $75 for banners and panels. Stream Pack is $150 for overlays and alerts. Character Pack is $200 for a mascot logo and emotes. Full Brand is $375 and includes the three packages above, plus an animated stinger and a one-page brand guide. They are not in the cart yet."
+          "text": "Starter is $75 for banners and panels. Stream Pack is $150 for overlays and alerts. Character Pack is $200 for a mascot logo and emotes. Full Brand is $375 and includes the three packages above, plus an animated stinger and a one-page brand guide. Add a package to the cart and pay with PayPal."
         }
       },
       {
@@ -844,7 +840,7 @@
           <a class="btn btn-primary" href="#packages">See packages</a>
           <a class="btn btn-secondary" href="/contact.html#book">Book a short intro</a>
         </div>
-        <p class="hero-next">These packages are not in the cart yet. Book a short intro and you’ll hear back within 1 business day, Monday–Friday.</p>
+        <p class="hero-next">Add a package to the cart and pay with PayPal. Or book a short intro and you’ll hear back within 1 business day, Monday–Friday.</p>
       </div>
     </section>
 
@@ -927,6 +923,7 @@
               <li>Offline screen</li>
               <li>Info panels</li>
             </ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-starter">Add to cart</button>
           </article>
           <article class="tier">
             <p class="tier-name">Stream Pack</p>
@@ -937,6 +934,7 @@
               <li>Starting, BRB, and ending screens</li>
               <li>Alerts</li>
             </ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-stream">Add to cart</button>
           </article>
           <article class="tier">
             <p class="tier-name">Character Pack</p>
@@ -947,6 +945,7 @@
               <li>Six Twitch emotes</li>
               <li>Subscriber badges</li>
             </ul>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-character">Add to cart</button>
           </article>
           <article class="tier">
             <p class="tier-name">Full Brand</p>
@@ -958,10 +957,11 @@
               <li>One-page brand guide for esports team branding</li>
             </ul>
             <p class="tier-meta">Save $50 vs. buying all three packs.</p>
+            <button type="button" class="btn btn-primary btn-small" data-add-to-cart="esports-full">Add to cart</button>
           </article>
         </div>
         <div class="service-copy">
-          <p>A PNGtuber model, a Kick or TikTok Live version of the overlay, or a monthly content retainer is quoted separately. These four packages are not in the cart yet. Desanya prepares the files, you approve, then they are sent.</p>
+          <p>A PNGtuber model, a Kick or TikTok Live version of the overlay, or a monthly content retainer is quoted separately. Add one of the four packages to the cart and pay with PayPal. Desanya prepares the files, you approve, then they are sent.</p>
           <p><a class="btn btn-primary" href="/contact.html#book">Book a short intro</a></p>
         </div>
       </div>
@@ -974,7 +974,7 @@
           <div class="faq">
             <details>
               <summary>How much does a custom stream package cost?</summary>
-              <p>Starter is $75 for banners and panels. Stream Pack is $150 for overlays and alerts. Character Pack is $200 for a mascot logo and emotes. Full Brand is $375 and includes the three packages above, plus an animated stinger and a one-page brand guide. They are not in the cart yet.</p>
+              <p>Starter is $75 for banners and panels. Stream Pack is $150 for overlays and alerts. Character Pack is $200 for a mascot logo and emotes. Full Brand is $375 and includes the three packages above, plus an animated stinger and a one-page brand guide. Add a package to the cart and pay with PayPal.</p>
             </details>
             <details>
               <summary>What is included in a custom Twitch overlay?</summary>
@@ -1076,10 +1076,10 @@
     </div>
 
     <div class="container footer-bottom">
-      <p class="footer-privacy">Privacy: forms are emailed through FormSubmit and are not stored on this site. Google Analytics, fonts, and checkout use your browser as described on the <a href="/privacy.html">privacy page</a>.</p>
+      <p class="footer-privacy">Privacy: forms are emailed through FormSubmit and are not stored on this site. Google Analytics and checkout use your browser as described on the <a href="/privacy.html">privacy page</a>. Fonts are files on this site.</p>
       <p class="footer-copy">&copy; <span data-year>2026</span> Desanya Studio</p>
     </div>
-    <script src="/assets/cart.js?v=9" defer></script>
+    <script src="/assets/cart.js?v=10" defer></script>
   </footer>
   <!-- /@partial:footer -->
 
@@ -1190,6 +1190,10 @@
               <option value="Email newsletter template — Basic $125" data-slug="email-basic">Email newsletter template — Basic $125</option>
               <option value="Email newsletter template — Standard $350" data-slug="email-standard">Email newsletter template — Standard $350</option>
               <option value="Email newsletter template — Premium $600" data-slug="email-premium">Email newsletter template — Premium $600</option>
+              <option value="Esports — Starter $75" data-slug="esports-starter">Esports — Starter $75</option>
+              <option value="Esports — Stream Pack $150" data-slug="esports-stream">Esports — Stream Pack $150</option>
+              <option value="Esports — Character Pack $200" data-slug="esports-character">Esports — Character Pack $200</option>
+              <option value="Esports — Full Brand $375" data-slug="esports-full">Esports — Full Brand $375</option>
               <option value="Extra page $200" data-slug="extra-page">Extra page $200</option>
               <option value="Extra revision round $40" data-slug="extra-revision">Extra revision round $40</option>
               <option value="Google Business Profile tune-up — Basic $150" data-slug="gbp-basic">Google Business Profile tune-up — Basic $150</option>
@@ -1253,7 +1257,7 @@
     </div>
   </div>
 
-  <script src="/site.js?v=25" defer></script>
+  <script src="/site.js?v=26" defer></script>
   <script>
     window.addEventListener('load', function () {
       var s = document.createElement('script');
