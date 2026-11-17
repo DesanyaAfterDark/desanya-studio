@@ -80,10 +80,10 @@ for phrase in BANNED:
 if not any(phrase in low for phrase in BANNED):
     ok("no internal or compliance-claim phrases in the article")
 
-if "Niota, TN" not in main:
-    fail("city Niota, TN missing")
+if "Knoxville, TN" not in main:
+    fail("city Knoxville, TN missing")
 else:
-    ok("city only: Niota, TN")
+    ok("city only: Knoxville, TN")
 
 if re.search(r"\b\d{1,5}\s+[A-Z][a-z]+ (Street|St|Road|Rd|Avenue|Ave|Lane|Ln|Drive|Dr)\b", main):
     fail("street address appears in the article")
@@ -216,8 +216,8 @@ else:
         fail("privacy page calls the studio an LLC")
     else:
         ok("privacy page does not call the studio an LLC")
-    if "Niota, TN" not in privacy_main:
-        fail("privacy page missing Niota, TN")
+    if "Knoxville, TN" not in privacy_main:
+        fail("privacy page missing Knoxville, TN")
     else:
         ok("privacy page city only")
     if "release date is still to be determined" not in plow:
