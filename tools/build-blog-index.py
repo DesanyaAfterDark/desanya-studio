@@ -60,10 +60,11 @@ def webp_source(post, sizes):
     return f'<source type="image/webp" srcset="{esc(srcset)}"{size_attr}>'
 
 
-def card(post, lazy):
+def card(post, lazy, anchor=""):
     loading = ' loading="lazy"' if lazy else ""
+    id_attr = f' id="{esc(anchor)}"' if anchor else ""
     return (
-        "          <li>\n"
+        f"          <li{id_attr}>\n"
         f'            <a class="post-card" href="/blog/{esc(post["slug"])}/">\n'
         "              <picture>\n"
         f'                {webp_source(post, "(max-width: 700px) 92vw, 480px")}\n'
@@ -100,10 +101,11 @@ def hero(post, anchor=""):
     )
 
 
-def cards(posts, start_lazy):
+def cards(posts, start_lazy, anchors=None):
+    anchors = anchors or {}
     lines = []
     for index, post in enumerate(posts):
-        lines.append(card(post, lazy=start_lazy or index > 0))
+        lines.append(card(post, start_lazy or index > 0, anchors.get(post["slug"], "")))
     return "\n".join(lines)
 
 
@@ -164,15 +166,40 @@ def index_html(topics, posts):
             if post["slug"] not in featured_slugs and post["slug"] not in newest_slugs
         ]
     visible = [topic for topic in topics if by_topic[topic["id"]]]
+    visible_ids = {topic["id"] for topic in visible}
+    used_anchors = set()
     for post in featured:
-        anchor = post["topic"] if post["topic"] not in {topic["id"] for topic in visible} else ""
+        anchor = ""
+        if post["topic"] not in visible_ids and post["topic"] not in used_anchors:
+            anchor = post["topic"]
+            used_anchors.add(anchor)
         parts.append(hero(post, anchor))
     if newest:
+        # A topic left with no group still needs an anchor. Featured already
+        # carries one. Newest does the same when every card shares that topic,
+        # and otherwise puts the id on the first card of each missing topic.
+        orphan_topics = []
+        for post in newest:
+            topic_id = post["topic"]
+            if topic_id not in visible_ids and topic_id not in used_anchors and topic_id not in orphan_topics:
+                orphan_topics.append(topic_id)
+        section_id = ""
+        card_anchors = {}
+        if len(orphan_topics) == 1 and all(post["topic"] == orphan_topics[0] for post in newest):
+            section_id = orphan_topics[0]
+            used_anchors.add(section_id)
+        else:
+            for post in newest:
+                topic_id = post["topic"]
+                if topic_id in orphan_topics and topic_id not in used_anchors:
+                    card_anchors[post["slug"]] = topic_id
+                    used_anchors.add(topic_id)
+        id_attr = f' id="{esc(section_id)}"' if section_id else ""
         parts.append(
-            '        <section class="newest-block" aria-labelledby="newest-heading">\n'
+            f'        <section class="newest-block"{id_attr} aria-labelledby="newest-heading">\n'
             '          <h2 id="newest-heading">Newest</h2>\n'
             '          <ul class="post-grid">\n'
-            + cards(newest, start_lazy=False)
+            + cards(newest, False, card_anchors)
             + "\n          </ul>\n"
             "        </section>"
         )
@@ -237,8 +264,10 @@ def index_html(topics, posts):
 
 
 def topic_line(topic):
+    # The opening comment keeps whatever indent already follows </nav>.
+    # Adding spaces here would grow that indent on every rebuild.
     return (
-        "        <!-- @blog-topic -->\n"
+        "<!-- @blog-topic -->\n"
         f'        <p class="post-topic"><a href="/blog/#{esc(topic["id"])}">{esc(topic["name"])}</a>'
         f' · <a href="{esc(topic["serviceHref"])}">{esc(topic["serviceLabel"])}</a></p>\n'
         "        <!-- /@blog-topic -->\n"
