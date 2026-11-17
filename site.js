@@ -21,7 +21,7 @@
  *   Do not paste search-result pages or placeholder profiles.
  */
 var DESANYA_LINKS = {
-  googleReviewUrl: 'https://www.google.com/maps/search/?api=1&query=Desanya%27s+Web+Designs+Niota+TN&query_place_id=605467311094588',
+  googleReviewUrl: 'https://www.google.com/maps/search/?api=1&query=Desanya%27s+Web+Designs+Knoxville+TN&query_place_id=605467311094588',
   social: {
     facebook: 'https://www.facebook.com/desanyastudio',
     instagram: 'https://www.instagram.com/desanyastudio/',
