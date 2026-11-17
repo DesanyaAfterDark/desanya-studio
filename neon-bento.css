@@ -12,6 +12,10 @@
   --nb-line: 1px solid var(--border);
 }
 body { background: radial-gradient(1100px 620px at 85% -8%, rgba(217,107,192,.16), transparent 65%), radial-gradient(900px 600px at -10% 40%, rgba(70,45,140,.22), transparent 70%), var(--bg); background-attachment: fixed; }
+/* Fixed backgrounds force extra paints while scrolling and are unreliable on phones. */
+@media (max-width: 820px) {
+  body { background-attachment: scroll; }
+}
 
 /* Generic tile treatment for existing cards site-wide */
 .price-card, .path-card, .proof-card, .principle, .work-card, .case-card, .booking-card,
@@ -210,7 +214,7 @@ main > .container:first-child { padding-top: clamp(2rem, 5vw, 3.5rem); padding-b
 main img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) { .btn, .btn:hover { transition: none; transform: none; } }
 
-/* Featured story hero on the blog index (Halloween 2026) */
+/* Featured story hero on the blog index */
 .featured-story { margin: 0 0 clamp(28px, 5vw, 56px); }
 .featured-story-label { font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-strong); margin: 0 0 12px; }
 .post-card--hero { display: grid; grid-template-columns: 1fr; }
@@ -223,7 +227,7 @@ main img { max-width: 100%; }
   .post-card--hero img { object-fit: cover; }
   .post-card--hero .post-card-body { padding: clamp(20px, 3vw, 40px); }
 }
-/* Crew cards in the Halloween post */
+/* Crew cards on the seasonal crew posts */
 .crew-grid { list-style: none; padding: 0; margin: 24px 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 .post-body .crew-grid li { margin: 0; }
 .crew-card { border: var(--nb-line, 1px solid rgba(255,255,255,.15)); border-radius: 16px; padding: 14px; height: 100%; }
@@ -299,8 +303,18 @@ main img { max-width: 100%; }
   align-items: center;
   min-height: 44px;
 }
-#packages, #add-ons, #custom, #price-list, #faq, .gallery-group {
+#packages, #add-ons, #custom, #price-list, #faq {
   scroll-margin-top: calc(var(--header-h) + 16px);
+}
+/* The gallery filter bar sticks under the header, so a group anchor needs
+   room for that second bar. One row on a phone, two when the chips wrap. */
+.gallery-group {
+  scroll-margin-top: calc(var(--header-h) + 5.25rem);
+}
+@media (min-width: 960px) {
+  .gallery-group {
+    scroll-margin-top: calc(var(--header-h) + 8.5rem);
+  }
 }
 
 /* Gallery: chips, quieter policy lines, captions that don't cover the art */

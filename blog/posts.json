@@ -33,6 +33,17 @@
   ],
   "posts": [
     {
+      "title": "Meet our cozy Thanksgiving AI crew",
+      "slug": "meet-our-cozy-thanksgiving-ai-crew",
+      "topic": "ai",
+      "date": "2026-11-17",
+      "featured": false,
+      "excerpt": "Desanya Studio’s 10 AI helpers got cozy for Thanksgiving 2026. Meet each one, see its harvest look, and learn the real job it does behind the scenes.",
+      "image": "/assets/blog/post-thanksgiving-ai-crew.jpg?v=1",
+      "imageWebp": "/assets/blog/post-thanksgiving-ai-crew.webp?v=1",
+      "imageAlt": "Ten cozy Thanksgiving avatars for Desanya Studio’s AI helpers on a deep purple background, with autumn leaves, little pies and harvest pumpkins in neon pink, plum and gold"
+    },
+    {
       "title": "Meet our spooky AI crew",
       "slug": "meet-our-spooky-ai-crew",
       "topic": "ai",
