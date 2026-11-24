@@ -51,18 +51,76 @@ body { background: radial-gradient(1100px 620px at 85% -8%, rgba(217,107,192,.16
   padding: clamp(24px, 4.5vw, 56px);
   box-shadow: 0 18px 50px rgba(0,0,0,.28);
 }
+/* Lockup is 1920×1280. The retired laptop was 960×439, so the frame follows the artwork instead of a tall padded box. */
+.hero--home .hero-visual { width: min(100%, 28rem); }
 .hero-art--brand {
-  display: grid; place-items: center;
-  min-height: 300px;
-  padding: clamp(20px, 3vw, 36px);
+  display: block;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  aspect-ratio: 1920 / 1280;
+  overflow: hidden;
   border-radius: var(--nb-radius);
   border: var(--nb-line);
-  background: radial-gradient(closest-side, rgba(238,156,219,.28), transparent 75%), var(--bg-elevated);
-  box-shadow: 0 0 0 1px rgba(245,192,74,.08), 0 0 60px rgba(217,107,192,.18);
-  transform: none !important; aspect-ratio: auto !important;
+  background: #080818;
+  box-shadow: 0 0 0 1px rgba(245,192,74,.08), 0 18px 50px rgba(0,0,0,.35);
+  transform: none !important;
 }
-.hero-art--brand img { width: 100%; max-width: 440px; height: auto; object-fit: contain; border-radius: 0; box-shadow: none; filter: drop-shadow(0 10px 30px rgba(217,107,192,.35)); }
+.hero-art--brand picture { display: block; height: 100%; }
+.hero-art--brand img {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  box-shadow: none;
+  filter: none;
+}
 .hero-art--brand::before, .hero-art--brand::after { display: none !important; }
+
+.home-teaser { padding: 0 0 clamp(0.25rem, 2vw, 1rem); }
+.home-teaser-card {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.85rem 1rem;
+  align-items: center;
+  padding: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  background: var(--nb-glow), var(--nb-tile);
+  border: var(--nb-line);
+  border-radius: var(--nb-radius);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+}
+.home-teaser-card:hover { border-color: var(--accent); }
+.home-teaser-card:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.home-teaser-card picture {
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.home-teaser-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.home-teaser-title {
+  display: block;
+  margin: 0.15rem 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.home-teaser-excerpt {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.hero-copy .promo-notice { margin: 0 0 1.35rem; max-width: 40rem; }
+.hero-copy .hero-price:has(+ .promo-notice:not([hidden])) { margin-bottom: 0.85rem; }
 
 .bento-grid--home {
   display: grid;
@@ -130,7 +188,11 @@ body { background: radial-gradient(1100px 620px at 85% -8%, rgba(217,107,192,.16
   .bento-grid--home { grid-template-columns: minmax(0, 1fr); }
   .bento-tile--about, .bento-tile--area, .bento-tile--tech, .bento-tile--follow { grid-column: auto; }
   .bento-grid--home .about-grid { grid-template-columns: minmax(0, 1fr); }
-  .hero-art--brand { min-height: 200px; }
+  .hero-art--brand { min-height: 0; }
+}
+@media (min-width: 720px) {
+  .home-teaser-card { grid-template-columns: 11rem minmax(0, 1fr); padding: 0.85rem 1rem; }
+  .home-teaser-title { font-size: 1.35rem; }
 }
 @media (prefers-reduced-motion: reduce) { .path-card, .price-card { transition: none; } .path-card:hover { transform: none; } }
 
